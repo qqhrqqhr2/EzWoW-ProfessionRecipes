@@ -1,5 +1,10 @@
 # EzWoW - Profession Recipes (`EzWoW-ProfessionRecipes`)
 
+## CurseForge
+
+- **Project ID / 프로젝트 ID:** `1729781`
+- **Project page / 프로젝트 페이지:** [EzWoW-ProfessionRecipes](https://www.curseforge.com/wow/addons/allprofessionrecipes)
+
 **[한국어](#한국어) · [English](#english)**
 
 WoW Forever (`Interface: 16001`) · `/ezpr`
