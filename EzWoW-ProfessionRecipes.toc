@@ -20,6 +20,7 @@
 ## Notes-zhTW: 在專業視窗旁新增未學專業的分頁並列出所有配方。(/ezpr)
 ## Author: qqhrqqhr2
 ## Version: 2.0.0
+## Category: EzWoW
 ## SavedVariables: EzWoW_ProfessionRecipesDB
 ## IconTexture: Interface\AddOns\EzWoW-ProfessionRecipes\Icon
 ## X-Curse-Project-ID: 1729781
