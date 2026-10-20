@@ -1,0 +1,34 @@
+## Interface: 16001
+## Title: EzWoW - Profession Recipes
+## Title-enUS: EzWoW - Profession Recipes
+## Title-koKR: EzWoW - Profession Recipes
+## Title-deDE: EzWoW - Profession Recipes
+## Title-frFR: EzWoW - Profession Recipes
+## Title-esES: EzWoW - Profession Recipes
+## Title-esMX: EzWoW - Profession Recipes
+## Title-ruRU: EzWoW - Profession Recipes
+## Title-zhCN: EzWoW - Profession Recipes
+## Title-zhTW: EzWoW - Profession Recipes
+## Notes: Adds tabs for professions you have not learned to the profession window and lists their recipes. (8 languages) (/ezpr)
+## Notes-koKR: 전문 기술 창 옆에 배우지 않은 전문 기술 탭을 추가하고 제작 목록을 보여줍니다. (8개 언어 지원) (/ezpr, /제조법, /전문기술)
+## Notes-deDE: Fügt dem Berufsfenster Reiter für nicht erlernte Berufe hinzu und zeigt deren Rezepte an. (/ezpr)
+## Notes-frFR: Ajoute des onglets pour les métiers non appris à la fenêtre des métiers et affiche leurs recettes. (/ezpr)
+## Notes-esES: Añade pestañas para las profesiones no aprendidas en la ventana de profesiones y muestra sus recetas. (/ezpr)
+## Notes-esMX: Añade pestañas para las profesiones no aprendidas en la ventana de profesiones y muestra sus recetas. (/ezpr)
+## Notes-ruRU: Добавляет вкладки неизученных профессий к окну профессий и показывает все их рецепты. (/ezpr)
+## Notes-zhCN: 在专业窗口旁添加未学专业的标签页并列出所有配方。(/ezpr)
+## Notes-zhTW: 在專業視窗旁新增未學專業的分頁並列出所有配方。(/ezpr)
+## Author: qqhrqqhr2
+## Version: 1.0.0
+## SavedVariables: EzWoW_ProfessionRecipesDB
+## IconTexture: Interface\AddOns\EzWoW-ProfessionRecipes\Icon
+## X-Curse-Project-ID: 1729781
+
+Data\RecipeData.lua
+Core\Init.lua
+Core\UIKit.lua
+Core\Locales.lua
+Modules\RecipeIndex.lua
+Modules\QuickAction.lua
+UI\RecipeBrowser.lua
+UI\OptionsWindow.lua

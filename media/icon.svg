@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- EzWoWStyle v1.0: Dark background #12181F, Border #344C5B + Orange Accent #EBA86A, Book & Crafting Tool silhouette -->
+  <rect x="0" y="0" width="400" height="400" rx="28" fill="#12181F"/>
+  <rect x="8" y="8" width="384" height="384" rx="22" fill="#1D2831" stroke="#344C5B" stroke-width="10"/>
+  <rect x="20" y="20" width="360" height="360" rx="16" fill="#12181F" stroke="#EBA86A" stroke-width="6"/>
+
+  <!-- Open Recipe Book Silhouette -->
+  <g transform="translate(200,235)">
+    <path d="M-135,-60 Q-68,-82 0,-56 Q68,-82 135,-60 L135,68 Q68,48 0,72 Q-68,48 -135,68 Z" fill="#1D2831" stroke="#EBA86A" stroke-width="8"/>
+    <path d="M-122,-64 Q-62,-82 -6,-58 L-6,54 Q-62,36 -122,54 Z" fill="#EDF4F7"/>
+    <path d="M122,-64 Q62,-82 6,-58 L6,54 Q62,36 122,54 Z" fill="#EDF4F7"/>
+    <g stroke="#344C5B" stroke-width="8" stroke-linecap="round">
+      <line x1="-102" y1="-36" x2="-26" y2="-28"/>
+      <line x1="-102" y1="-8" x2="-26" y2="0"/>
+      <line x1="-102" y1="20" x2="-46" y2="26"/>
+    </g>
+    <!-- Crafting Hammer on Right Page -->
+    <g transform="translate(64,-4) rotate(-35)">
+      <rect x="-6" y="-4" width="12" height="58" rx="4" fill="#EBA86A"/>
+      <rect x="-28" y="-24" width="56" height="22" rx="5" fill="#12181F" stroke="#EBA86A" stroke-width="4"/>
+    </g>
+    <line x1="0" y1="-58" x2="0" y2="70" stroke="#EBA86A" stroke-width="6"/>
+  </g>
+
+  <!-- Crafting Emblem Top -->
+  <g transform="translate(200,104)">
+    <circle cx="0" cy="0" r="38" fill="#1D2831" stroke="#EBA86A" stroke-width="6"/>
+    <path d="M0,-22 L6,-6 L22,0 L6,6 L0,22 L-6,6 L-22,0 L-6,-6 Z" fill="#EBA86A"/>
+  </g>
+</svg>
