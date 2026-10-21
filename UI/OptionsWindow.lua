@@ -127,6 +127,7 @@ function SettingsDialog.buildRadioGroup(parent, items, getter, setter, descKey)
         for _, optionRef in ipairs(radioOptionGroup) do
             optionRef:SetChecked(optionRef.value == getter())
             optionRef.label:SetText(L[optionRef.textKey] or optionRef.textKey)
+            if optionRef.fitWidth then ns.UIKit:FitFontString(optionRef.label, optionRef.fitWidth, 1) end
         end
     end
     return radioOptionGroup
@@ -226,6 +227,7 @@ function SettingsDialog.buildSettings()
         local rowWidget = math.floor(zero / 2)
         langCode[entryIndex]:SetPoint("TOPLEFT", langCode[1], "BOTTOMLEFT", columnIndex * 185, -2 - rowWidget * 24)
     end
+    for entryIndex = 1, 9 do langCode[entryIndex].fitWidth = 158 end
     local note = windowFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     note:SetPoint("TOPLEFT", langCode[8], "BOTTOMLEFT", 2, -4)
     note:SetPoint("RIGHT", windowFrame, "RIGHT", -20, 0)
@@ -247,6 +249,7 @@ function SettingsDialog.buildSettings()
             coordPos[i].label:SetWidth(104)
             coordPos[i].label:SetJustifyH("LEFT")
             if coordPos[i].label.SetWordWrap then coordPos[i].label:SetWordWrap(false) end
+            coordPos[i].fitWidth = 104
         end
     end
 
@@ -303,6 +306,7 @@ function SettingsDialog.buildSettings()
             quick[idx].label:SetWidth(158)
             quick[idx].label:SetJustifyH("LEFT")
             if quick[idx].label.SetWordWrap then quick[idx].label:SetWordWrap(false) end
+            quick[idx].fitWidth = 158
         end
     end
 
@@ -336,10 +340,14 @@ function SettingsDialog.buildSettings()
         note:SetText(L.langNote)
         posLabel:SetText(L.tabPosLabel)
         sizeLabel:SetText(L.iconSizeLabel:format(ns.DB.iconSize or 30))
+        ns.UIKit:FitFontString(sizeLabel, 300, 1)  -- must stay left of the -/+ buttons
         quickLabel:SetText(L.quickActionLabel)
         resetBtn.label:SetText(L.resetSettings or RESET or "Reset")
+        ns.UIKit:FitFontString(resetBtn.label, 176, 1)
         donate.label:SetText(L.donate)
+        ns.UIKit:FitFontString(donate.label, 176, 1)
         tipText:SetText(L.reagentTooltip)
+        ns.UIKit:FitFontString(tipText, 360, 1)
         tipCheck:SetChecked(ns.DB.reagentTooltip)
         langCode.Refresh()
         coordPos.Refresh()

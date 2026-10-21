@@ -464,7 +464,10 @@ function RecipeBrowserWindow.createRecipeFlatButton(parent, w, h, isAccent, onCl
     label:SetPoint("CENTER")
     label:SetTextColor(unpack(isAccent and Theme.accent or Theme.text))
     b.label = label
-    function b:SetText(txt) label:SetText(txt or "") end
+    function b:SetText(txt)
+        label:SetText(txt or "")
+        ns.UIKit:FitFontString(label, (b:GetWidth() or w) - 8, 1)
+    end
     function b:GetText() return label:GetText() end
     b:SetScript("OnEnter", function()
         b:SetBackdropColor(0.20, 0.24, 0.29, 1)
