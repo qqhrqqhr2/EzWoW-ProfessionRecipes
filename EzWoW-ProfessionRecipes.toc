@@ -10,6 +10,7 @@
 ## Title-zhCN: EzWoW - Profession Recipes
 ## Title-zhTW: EzWoW - Profession Recipes
 ## Notes: Adds tabs for professions you have not learned to the profession window and lists their recipes. (8 languages) (/ezpr)
+## Notes-enUS: Adds tabs for professions you have not learned to the profession window and lists their recipes. (8 languages) (/ezpr)
 ## Notes-koKR: 전문 기술 창 옆에 배우지 않은 전문 기술 탭을 추가하고 제작 목록을 보여줍니다. (8개 언어 지원) (/ezpr, /제조법, /전문기술)
 ## Notes-deDE: Fügt dem Berufsfenster Reiter für nicht erlernte Berufe hinzu und zeigt deren Rezepte an. (/ezpr)
 ## Notes-frFR: Ajoute des onglets pour les métiers non appris à la fenêtre des métiers et affiche leurs recettes. (/ezpr)

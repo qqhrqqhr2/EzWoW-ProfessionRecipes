@@ -3,6 +3,13 @@
 -- UI/OptionsWindow.lua : EzWoW Style Settings Window, Radio Selectors & Slash Commands
 --===========================================================================
 local ADDON, ns = ...
+-- Text for the game's AddOns panel in the six languages without their own line: { deDE, frFR, esES, ruRU, zhCN, zhTW }
+local PANEL_LANG_INDEX = { deDE = 1, frFR = 2, esES = 3, esMX = 3, ruRU = 4, zhCN = 5, zhTW = 6, de = 1, fr = 2, es = 3, ru = 4 }
+local function panelText(code, ko, en, others)
+    if code == "koKR" or code == "ko" then return ko end
+    local index = PANEL_LANG_INDEX[code or ""]
+    return (index and others and others[index]) or en
+end
 local type, pairs, ipairs, tonumber, tostring, select, pcall = type, pairs, ipairs, tonumber, tostring, select, pcall
 
 local SettingsDialog = ns.SettingsDialog or {}
@@ -411,9 +418,9 @@ function SettingsDialog.registerBlizzardSettings()
     hint:SetTextColor(unpack(Theme.muted))
 
     function canvasFrame:UpdateTexts()
-        desc:SetText(ns.IS_KO and "모든 전문기술의 제조법, 숙련도 구간, 필요 재료 및 도안 획득처를 한눈에 확인합니다." or "Browse recipes, skill ranges, reagents, and recipe sources for all professions.")
+        desc:SetText(panelText(ns.ACTIVE_LANG, "모든 전문기술의 제조법, 숙련도 구간, 필요 재료 및 도안 획득처를 한눈에 확인합니다.", "Browse recipes, skill ranges, reagents, and recipe sources for all professions.", { "Zeigt Rezepte, Fertigkeitsbereiche, Reagenzien und Rezeptquellen aller Berufe.", "Parcourez les recettes, paliers de compétence, composants et sources de recettes de tous les métiers.", "Consulta recetas, rangos de habilidad, componentes y origen de las recetas de todas las profesiones.", "Рецепты, диапазоны навыка, реагенты и источники рецептов всех профессий.", "查看所有专业的配方、技能区间、所需材料和配方来源。", "查看所有專業的配方、技能區間、所需材料和配方來源。" }))
         buttonWidget:SetText((L.settings or "설정") .. " (/ezpr)")
-        hint:SetText(ns.IS_KO and "채팅창에 /ezpr 또는 /ezpr config를 입력해도 열립니다." or "Type /ezpr or /ezpr config in chat to open settings.")
+        hint:SetText(panelText(ns.ACTIVE_LANG, "채팅창에 /ezpr 또는 /ezpr config를 입력해도 열립니다.", "Type /ezpr or /ezpr config in chat to open settings.", { "Du kannst die Einstellungen auch mit /ezpr oder /ezpr config im Chat öffnen.", "Vous pouvez aussi ouvrir les options en tapant /ezpr ou /ezpr config dans le chat.", "También puedes abrir las opciones escribiendo /ezpr o /ezpr config en el chat.", "Настройки также открываются командой /ezpr или /ezpr config в чате.", "也可以在聊天框输入 /ezpr 或 /ezpr config 打开设置。", "也可以在聊天框輸入 /ezpr 或 /ezpr config 開啟設定。" }))
     end
     canvasFrame:SetScript("OnShow", function(self) self:UpdateTexts() end)
     canvasFrame:UpdateTexts()
