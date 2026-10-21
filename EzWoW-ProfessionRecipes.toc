@@ -19,7 +19,7 @@
 ## Notes-zhCN: 在专业窗口旁添加未学专业的标签页并列出所有配方。(/ezpr)
 ## Notes-zhTW: 在專業視窗旁新增未學專業的分頁並列出所有配方。(/ezpr)
 ## Author: qqhrqqhr2
-## Version: 2.0.2
+## Version: 2.0.3
 ## Category: EzWoW
 ## SavedVariables: EzWoW_ProfessionRecipesDB
 ## IconTexture: Interface\AddOns\EzWoW-ProfessionRecipes\Icon
