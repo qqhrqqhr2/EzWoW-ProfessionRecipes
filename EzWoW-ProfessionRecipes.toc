@@ -32,4 +32,5 @@ Core\Locales.lua
 Modules\RecipeIndex.lua
 Modules\QuickAction.lua
 UI\RecipeBrowser.lua
+UI\LanguageDropdown.lua
 UI\OptionsWindow.lua

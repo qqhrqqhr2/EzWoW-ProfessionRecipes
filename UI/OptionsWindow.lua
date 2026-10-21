@@ -141,7 +141,7 @@ function SettingsDialog.buildSettings()
     windowFrame:SetBackdropColor(unpack(Theme.bg))
     windowFrame:SetBackdropBorderColor(unpack(Theme.border))
     ns.settingsFrame = windowFrame
-    windowFrame:SetSize(420, 528)
+    windowFrame:SetSize(420, 436)
     windowFrame:SetPoint("CENTER")
     windowFrame:SetFrameStrata("FULLSCREEN_DIALOG")
     windowFrame:SetToplevel(true)
@@ -205,7 +205,8 @@ function SettingsDialog.buildSettings()
     end
 
     local langLabel = createSectionDivider(-70)
-    local langCode = SettingsDialog.buildRadioGroup(windowFrame, {
+    -- language: click the box, then pick a language from the list
+    local LANG_TEXT_KEYS = {
         { value = "auto", textKey = "langAuto" },
         { value = "ko",   textKey = "langKo" },
         { value = "en",   textKey = "langEn" },
@@ -215,35 +216,47 @@ function SettingsDialog.buildSettings()
         { value = "ru",   textKey = "langRu" },
         { value = "zhCN", textKey = "langZhCN" },
         { value = "zhTW", textKey = "langZhTW" },
-    }, function() return ns.DB.lang end, function(v)
-        ns.DB.lang = v
-        commitLanguage()
-        ns.RefreshTexts()
-    end)
-    langCode[1]:SetPoint("TOPLEFT", 20, -94)
-    for entryIndex = 2, 9 do
-        local zero = entryIndex - 2
-        local columnIndex = zero % 2
-        local rowWidget = math.floor(zero / 2)
-        langCode[entryIndex]:SetPoint("TOPLEFT", langCode[1], "BOTTOMLEFT", columnIndex * 185, -2 - rowWidget * 24)
+    }
+    local function langName(value)
+        for _, item in ipairs(LANG_TEXT_KEYS) do
+            if item.value == value then return L[item.textKey] or item.textKey end
+        end
+        return L.langAuto
     end
-    for entryIndex = 1, 9 do langCode[entryIndex].fitWidth = 158 end
+    local langBox = createRecipeFlatButton(windowFrame, 240, 24, false, nil)
+    langBox:SetPoint("TOPLEFT", 20, -96)
+    local langItems = {}
+    for index, item in ipairs(LANG_TEXT_KEYS) do
+        langItems[index] = { value = item.value, text = function() return L[item.textKey] or item.textKey end }
+    end
+    ns.LanguageDropdown.Attach(langBox, {
+        items = langItems,
+        colors = { bg = Theme.bg, border = Theme.border, accent = Theme.accent, text = Theme.text },
+        get = function() return ns.DB.lang or "auto" end,
+        set = function(v)
+            ns.DB.lang = v
+            commitLanguage()
+            ns.RefreshTexts()
+        end,
+    })
+    -- the single box takes 92px less than the old radio buttons; everything below moves up
+    local LANG_ROWS_SAVED = 92
     local note = windowFrame:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    note:SetPoint("TOPLEFT", langCode[8], "BOTTOMLEFT", 2, -4)
+    note:SetPoint("TOPLEFT", langBox, "BOTTOMLEFT", 2, -4)
     note:SetPoint("RIGHT", windowFrame, "RIGHT", -20, 0)
     note:SetJustifyH("LEFT")
     note:SetTextColor(unpack(Theme.muted))
 
-    local posLabel = createSectionDivider(-252)
+    local posLabel = createSectionDivider(-252 + LANG_ROWS_SAVED)
     local coordPos = SettingsDialog.buildRadioGroup(windowFrame, {
         { value = "left", textKey = "posLeftL" }, { value = "bottom", textKey = "posBottomL" }, { value = "side", textKey = "posRightL" },
     }, function() return ns.DB.tabPos end, function(v)
         ns.DB.tabPos = v
         positionProfessionSideTabs()
     end, "tabPosDesc")
-    coordPos[1]:SetPoint("TOPLEFT", 20, -276)
-    coordPos[2]:SetPoint("TOPLEFT", 152, -276)
-    coordPos[3]:SetPoint("TOPLEFT", 284, -276)
+    coordPos[1]:SetPoint("TOPLEFT", 20, -276 + LANG_ROWS_SAVED)
+    coordPos[2]:SetPoint("TOPLEFT", 152, -276 + LANG_ROWS_SAVED)
+    coordPos[3]:SetPoint("TOPLEFT", 284, -276 + LANG_ROWS_SAVED)
     for i = 1, 3 do
         if coordPos[i].label then
             coordPos[i].label:SetWidth(104)
@@ -254,7 +267,7 @@ function SettingsDialog.buildSettings()
     end
 
     local sizeLabel = windowFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    sizeLabel:SetPoint("TOPLEFT", 22, -312)
+    sizeLabel:SetPoint("TOPLEFT", 22, -312 + LANG_ROWS_SAVED)
     sizeLabel:SetTextColor(unpack(Theme.text))
     local function sizeBtn(text, delta)
         local buttonWidget = createRecipeFlatButton(windowFrame, 32, 22, false, function()
@@ -266,13 +279,13 @@ function SettingsDialog.buildSettings()
         return buttonWidget
     end
     local plus = sizeBtn("+", 2)
-    plus:SetPoint("TOPRIGHT", -20, -308)
+    plus:SetPoint("TOPRIGHT", -20, -308 + LANG_ROWS_SAVED)
     local minus = sizeBtn("-", -2)
     minus:SetPoint("RIGHT", plus, "LEFT", -6, 0)
 
     local tipCheck = CreateFrame("CheckButton", nil, windowFrame, "UICheckButtonTemplate")
     tipCheck:SetSize(24, 24)
-    tipCheck:SetPoint("TOPLEFT", 18, -342)
+    tipCheck:SetPoint("TOPLEFT", 18, -342 + LANG_ROWS_SAVED)
     local tipText = tipCheck.Text or tipCheck.text or tipCheck:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     if not (tipCheck.Text or tipCheck.text) then tipText:SetPoint("LEFT", tipCheck, "RIGHT", 4, 0) end
     tipText:SetFontObject("GameFontHighlight")
@@ -288,7 +301,7 @@ function SettingsDialog.buildSettings()
     end)
     tipCheck:SetScript("OnLeave", GameTooltip_Hide)
 
-    local quickLabel = createSectionDivider(-378)
+    local quickLabel = createSectionDivider(-378 + LANG_ROWS_SAVED)
     local quick = SettingsDialog.buildRadioGroup(windowFrame, {
         { value = "ALT",   textKey = "quickAlt" },
         { value = "CTRL",  textKey = "quickCtrl" },
@@ -301,7 +314,7 @@ function SettingsDialog.buildSettings()
     for idx = 1, 4 do
         local col = (idx - 1) % 2
         local row = math.floor((idx - 1) / 2)
-        quick[idx]:SetPoint("TOPLEFT", 20 + col * 190, -402 - row * 26)
+        quick[idx]:SetPoint("TOPLEFT", 20 + col * 190, -402 + LANG_ROWS_SAVED - row * 26)
         if quick[idx].label then
             quick[idx].label:SetWidth(158)
             quick[idx].label:SetJustifyH("LEFT")
@@ -349,7 +362,9 @@ function SettingsDialog.buildSettings()
         tipText:SetText(L.reagentTooltip)
         ns.UIKit:FitFontString(tipText, 360, 1)
         tipCheck:SetChecked(ns.DB.reagentTooltip)
-        langCode.Refresh()
+        langBox.label:SetText(langName(ns.DB.lang or "auto") .. " ▼")
+        ns.UIKit:FitFontString(langBox.label, 228, 1)
+        ns.LanguageDropdown.Refresh(langBox)
         coordPos.Refresh()
         quick.Refresh()
         if optionsCanvas and optionsCanvas.UpdateTexts then
