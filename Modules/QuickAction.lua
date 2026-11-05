@@ -282,13 +282,24 @@ function QuickCraftAdvisor.syncSkillLevels()
     if C_SkillInfo and C_SkillInfo.GetNumSkillLines and C_SkillInfo.GetSkillLineInfo then
         local isCallOk, numericVal = pcall(C_SkillInfo.GetNumSkillLines)
         if isCallOk and type(numericVal) == "number" then
+            -- expand collapsed headers first (bottom-up so earlier indices stay valid), then read every line
+            if C_SkillInfo.ExpandSkillHeader then
+                local hasExpanded = false
+                for headerIndex = numericVal, 1, -1 do
+                    local okHeader, headerInfo = pcall(C_SkillInfo.GetSkillLineInfo, headerIndex)
+                    if okHeader and headerInfo and headerInfo.isHeader and headerInfo.isCollapsed then
+                        pcall(C_SkillInfo.ExpandSkillHeader, headerIndex)
+                        hasExpanded = true
+                    end
+                end
+                if hasExpanded then
+                    local okCount, newCount = pcall(C_SkillInfo.GetNumSkillLines)
+                    if okCount and type(newCount) == "number" then numericVal = newCount end
+                end
+            end
             for findSequenceMatchIndex = 1, numericVal do
                 local ok2, apiInfo = pcall(C_SkillInfo.GetSkillLineInfo, findSequenceMatchIndex)
                 if ok2 and apiInfo then
-                    if apiInfo.isHeader and apiInfo.isCollapsed and C_SkillInfo.ExpandSkillHeader then
-                        pcall(C_SkillInfo.ExpandSkillHeader, findSequenceMatchIndex)
-                        return
-                    end
                     if apiInfo.skillID and apiInfo.rank then
                         skillLevels[apiInfo.skillID] = apiInfo.rank
                     end
@@ -305,10 +316,27 @@ function QuickCraftAdvisor.syncSkillLevels()
             [QuickCraftAdvisor.resolveSpellNameByID(2575)] = 186,
             [QuickCraftAdvisor.resolveSpellNameByID(3908)] = 197,
         }
+        if ExpandSkillHeader then
+            for headerIndex = GetNumSkillLines(), 1, -1 do
+                local _, isHeader, isExpanded = GetSkillLineInfo(headerIndex)
+                if isHeader and not isExpanded then pcall(ExpandSkillHeader, headerIndex) end
+            end
+        end
         for findSequenceMatchIndex = 1, GetNumSkillLines() do
             local skillName, hasHeader, hasExpanded, skillLevel = GetSkillLineInfo(findSequenceMatchIndex)
             if skillName and not hasHeader and SPELL_TO_PROF[skillName] then
                 skillLevels[SPELL_TO_PROF[skillName]] = skillLevel
+            end
+        end
+    end
+    -- Mainline-engine clients may lack both skill-line APIs above; fall back to GetProfessions.
+    if next(skillLevels) == nil and GetProfessions and GetProfessionInfo then
+        local profList = { GetProfessions() }
+        for index = 1, 6 do
+            local profIndex = profList[index]
+            if profIndex then
+                local isCallOk, _, _, rank, _, _, _, skillLine = pcall(GetProfessionInfo, profIndex)
+                if isCallOk and skillLine and rank then skillLevels[skillLine] = rank end
             end
         end
     end
@@ -541,6 +569,8 @@ QuickActionButton:HookScript("OnAttributeChanged", function(self, name, value)
 end)
 
 QuickActionButton:HookScript("OnShow", function(self)
+    -- the visibility driver can show this secure button in combat; moving it then is blocked
+    if InCombatLockdown and InCombatLockdown() then return end
     local ownerFrame = GameTooltip and GameTooltip:GetOwner()
     if ownerFrame then
         local calculateCanvasScale = (UIParent and UIParent.GetScale and UIParent:GetScale()) or 1
@@ -684,6 +714,21 @@ function QuickCraftAdvisor.inspectBagLocation(tooltip, location)
     return true
 end
 
+-- Item link shown on a tooltip; some tooltip objects have no :GetItem()
+function QuickCraftAdvisor.resolveTooltipItemLink(tooltip, data)
+    local itemLink = data and data.hyperlink
+    if type(itemLink) ~= "string" and TooltipUtil and TooltipUtil.GetDisplayedItem then
+        local isCallOk, _, displayedLink = pcall(TooltipUtil.GetDisplayedItem, tooltip)
+        if isCallOk then itemLink = displayedLink end
+    end
+    if type(itemLink) ~= "string" and tooltip and type(tooltip.GetItem) == "function" then
+        local isCallOk, _, displayedLink = pcall(tooltip.GetItem, tooltip)
+        if isCallOk then itemLink = displayedLink end
+    end
+    if type(itemLink) ~= "string" or (issecretvalue and issecretvalue(itemLink)) then return nil end
+    return itemLink
+end
+
 function QuickCraftAdvisor.onTooltipPostCall(tooltip, data)
     pcall(function()
         if not (tooltip and tooltip == GameTooltip) then return end
@@ -711,7 +756,7 @@ function QuickCraftAdvisor.onTooltipPostCall(tooltip, data)
         end
 
         if ownerFrame.GetName and ownerFrame:GetName() == "TradeRecipientItem7ItemButton" then
-            local _, itemLink = tooltip:GetItem()
+            local itemLink = QuickCraftAdvisor.resolveTooltipItemLink(tooltip, data)
             if itemLink and GetTradeTargetItemLink and itemLink == GetTradeTargetItemLink(7) then
                 local itemID = tonumber(itemLink:match("item:(%d+)"))
                 if itemID then
@@ -732,7 +777,7 @@ function QuickCraftAdvisor.configureTooltipHooks()
         if GameTooltip.SetBagItem then
             hooksecurefunc(GameTooltip, "SetBagItem", function(tooltip, bagID, slotID)
                 if not (bagID and slotID and bagID >= 0 and bagID <= 5) then return end
-                local _, itemLink = tooltip:GetItem()
+                local itemLink = QuickCraftAdvisor.resolveTooltipItemLink(tooltip, nil)
                 local itemID = itemLink and tonumber(itemLink:match("item:(%d+)"))
                 if itemID then
                     QuickCraftAdvisor.processTooltipItem(tooltip, itemID, bagID, slotID, 1, nil)
@@ -748,7 +793,7 @@ qev:RegisterEvent("PLAYER_REGEN_ENABLED")
 qev:RegisterEvent("BAG_UPDATE_DELAYED")
 qev:RegisterEvent("MODIFIER_STATE_CHANGED")
 qev:RegisterEvent("SKILL_LINES_CHANGED")
-qev:RegisterEvent("CVAR_UPDATE")
+pcall(qev.RegisterEvent, qev, "CVAR_UPDATE")
 qev:SetScript("OnEvent", function(_, event, arg1)
     if event == "PLAYER_LOGIN" then
         QuickCraftAdvisor.syncSkillLevels()
@@ -789,18 +834,16 @@ qev:SetScript("OnEvent", function(_, event, arg1)
                         if ItemLocation and ItemLocation.CreateFromBagAndSlot then
                             if QuickCraftAdvisor.inspectBagLocation(GameTooltip, ItemLocation:CreateFromBagAndSlot(bagID, slotID)) then return end
                         end
-                        if GameTooltip.GetItem then
-                            local _, link = GameTooltip:GetItem()
-                            local itemID = link and tonumber(link:match("item:(%d+)"))
-                            if itemID then
-                                QuickCraftAdvisor.processTooltipItem(GameTooltip, itemID, bagID, slotID, 1, nil)
-                                return
-                            end
+                        local link = QuickCraftAdvisor.resolveTooltipItemLink(GameTooltip, nil)
+                        local itemID = link and tonumber(link:match("item:(%d+)"))
+                        if itemID then
+                            QuickCraftAdvisor.processTooltipItem(GameTooltip, itemID, bagID, slotID, 1, nil)
+                            return
                         end
                     end
                 end
-                if ownerFrame.GetName and ownerFrame:GetName() == "TradeRecipientItem7ItemButton" and GameTooltip.GetItem then
-                    local _, itemLink = GameTooltip:GetItem()
+                if ownerFrame.GetName and ownerFrame:GetName() == "TradeRecipientItem7ItemButton" then
+                    local itemLink = QuickCraftAdvisor.resolveTooltipItemLink(GameTooltip, nil)
                     if itemLink and GetTradeTargetItemLink and itemLink == GetTradeTargetItemLink(7) then
                         local itemID = tonumber(itemLink:match("item:(%d+)"))
                         if itemID then

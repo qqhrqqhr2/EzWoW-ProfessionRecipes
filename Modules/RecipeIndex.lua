@@ -76,11 +76,11 @@ function RecipeCatalogIndex.resolveRecipeSrc(rowEntry)
     return table.concat(outputList, "\n")
 end
 
-local resolveItemNameByID = (C_Item and C_Item.GetItemNameByID) or function(id) return (GetItemInfo(id)) end
+local queryItemCountAPI = (C_Item and C_Item.GetItemCount) or GetItemCount or function() return 0 end
+local queryItemInfoAPI = (C_Item and C_Item.GetItemInfo) or GetItemInfo or function() return nil end
+local resolveItemNameByID = (C_Item and C_Item.GetItemNameByID) or function(id) return (queryItemInfoAPI(id)) end
 local resolveItemIconByID = (C_Item and C_Item.GetItemIconByID) or GetItemIcon
-local resolveItemQualityByID = (C_Item and C_Item.GetItemQualityByID) or function(id) return select(3, GetItemInfo(id)) end
-local queryItemCountAPI = (C_Item and C_Item.GetItemCount) or GetItemCount
-local queryItemInfoAPI = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+local resolveItemQualityByID = (C_Item and C_Item.GetItemQualityByID) or function(id) return (select(3, queryItemInfoAPI(id))) end
 
 function RecipeCatalogIndex.resolveItemName(id)
     
@@ -152,7 +152,7 @@ function RecipeCatalogIndex.scanLearnedProfessionIDs()
         [182] = { 2366, 2368, 3570, 11993 }, [393] = { 8613, 8617, 8618, 10768 },
         [356] = { 7620, 7731, 7732, 18248 },
     }
-    local hasKnown = IsPlayerSpell or IsSpellKnown
+    local hasKnown = IsPlayerSpell or IsSpellKnown or (C_SpellBook and C_SpellBook.IsSpellKnown)
     if hasKnown then
         for skill, spells in pairs(RANK_SPELLS) do
             for _, id in ipairs(spells) do

@@ -126,6 +126,12 @@ function RecipeBrowserWindow.resolveCurrentTradeSkillLine()
         local entityID = RecipeBrowserWindow.matchProfName(name)
         if entityID then return entityID, rank end
     end
+    -- older craft window (enchanting)
+    if GetCraftDisplaySkillLine and CraftFrame and CraftFrame.IsShown and CraftFrame:IsShown() then
+        local isCallOk, name, rank = pcall(GetCraftDisplaySkillLine)
+        local entityID = isCallOk and RecipeBrowserWindow.matchProfName(name)
+        if entityID then return entityID, rank end
+    end
 end
 
 function RecipeBrowserWindow.syncLearned()
@@ -421,7 +427,13 @@ function RecipeBrowserWindow.linkRecipe(r, itemID)
     elseif r then
         link = (C_Spell and C_Spell.GetSpellLink and C_Spell.GetSpellLink(r[R_SPELL])) or (GetSpellLink and GetSpellLink(r[R_SPELL]))
     end
-    if link then ChatEdit_InsertLink(link) end
+    if link then
+        if ChatEdit_InsertLink then
+            ChatEdit_InsertLink(link)
+        elseif ChatFrameUtil and ChatFrameUtil.InsertLink then
+            ChatFrameUtil.InsertLink(link)
+        end
+    end
 end
 
 function RecipeBrowserWindow.buildCheck(parent, label, key)
@@ -1018,10 +1030,25 @@ function RecipeBrowserWindow.resolveNativeTabs()
     return outputList
 end
 
-function RecipeBrowserWindow.buildTab(findSequenceMatchIndex)
-    local isCallOk, tabWidget = pcall(CreateFrame, "Frame", nil, ProfessionsFrame, "QuestLogTabButtonTemplate")
+-- Profession windows a client may use: the modern one, or the older trade skill / craft windows
+local HOST_FRAME_NAMES = { "ProfessionsFrame", "TradeSkillFrame", "CraftFrame" }
+
+function RecipeBrowserWindow.resolveHostFrame()
+    local fallback
+    for _, frameName in ipairs(HOST_FRAME_NAMES) do
+        local frame = _G[frameName]
+        if type(frame) == "table" and frame.IsShown then
+            if frame:IsShown() then return frame end
+            fallback = fallback or frame
+        end
+    end
+    return fallback
+end
+
+function RecipeBrowserWindow.buildTab(findSequenceMatchIndex, hostFrame)
+    local isCallOk, tabWidget = pcall(CreateFrame, "Frame", nil, hostFrame, "QuestLogTabButtonTemplate")
     if not isCallOk or not tabWidget then
-        tabWidget = CreateFrame("Button", nil, ProfessionsFrame)
+        tabWidget = CreateFrame("Button", nil, hostFrame)
         tabWidget:SetSize(36, 36)
         local backdropTex = tabWidget:CreateTexture(nil, "BACKGROUND")
         backdropTex:SetPoint("TOPLEFT", -4, 4)
@@ -1200,6 +1227,7 @@ function RecipeBrowserWindow.resolveLowestExistingTab()
 end
 
 function RecipeBrowserWindow.resolveTabStep()
+    if not ProfessionsFrame then return 50 end
     local a, b = ProfessionsFrame.ProfessionsOverviewTab, ProfessionsFrame.Professions1Tab
     if a and b and a:GetTop() and b:GetTop() then
         local stateFlag = a:GetTop() - b:GetTop()
@@ -1209,7 +1237,8 @@ function RecipeBrowserWindow.resolveTabStep()
 end
 
 function RecipeBrowserWindow.positionProfessionSideTabs()
-    if not ProfessionsFrame then return end
+    local hostFrame = RecipeBrowserWindow.resolveHostFrame()
+    if not hostFrame then return end
     for _, resolvedValue in ipairs(RecipeBrowserWindow.resolveNativeTabs()) do RecipeBrowserWindow.bindNativeTab(resolvedValue) end
 
     local learned = scanLearnedProfessionIDs()
@@ -1223,8 +1252,8 @@ function RecipeBrowserWindow.positionProfessionSideTabs()
 
     local anchor = RecipeBrowserWindow.resolveLowestExistingTab()
     local step = RecipeBrowserWindow.resolveTabStep()
-    local frameBottom = ProfessionsFrame:GetBottom() or 0
-    local topTab = ProfessionsFrame.ProfessionsOverviewTab
+    local frameBottom = hostFrame:GetBottom() or 0
+    local topTab = hostFrame.ProfessionsOverviewTab
     if type(topTab) ~= "table" or not topTab.GetTop or not topTab:IsShown() then topTab = nil end
 
     local below = 0
@@ -1238,7 +1267,8 @@ function RecipeBrowserWindow.positionProfessionSideTabs()
     local useSideColumn = anchor and topTab and #wanted > below
 
     for index, anchorTarget in ipairs(wanted) do
-        local tabWidget = buildJournalTabButtons[index] or RecipeBrowserWindow.buildTab(index)
+        local tabWidget = buildJournalTabButtons[index] or RecipeBrowserWindow.buildTab(index, hostFrame)
+        if tabWidget:GetParent() ~= hostFrame then tabWidget:SetParent(hostFrame) end
         tabWidget.skillLine = anchorTarget.id
         if tabWidget.Icon then
             tabWidget.Icon:SetTexture(anchorTarget.icon)
@@ -1251,13 +1281,13 @@ function RecipeBrowserWindow.positionProfessionSideTabs()
         local w = (anchor and anchor:GetWidth()) or tabWidget:GetWidth() or 40
         if ns.DB.tabPos == "left" then
             
-            local perLeft = math.max(1, math.floor(((ProfessionsFrame:GetHeight() or 600) - 80) / step))
+            local perLeft = math.max(1, math.floor(((hostFrame:GetHeight() or 600) - 80) / step))
             local columnIndex = math.floor((index - 1) / perLeft)
             local rowWidget = (index - 1) % perLeft
-            tabWidget:SetPoint("TOPRIGHT", ProfessionsFrame, "TOPLEFT", 2 - columnIndex * (w + 2), -70 - rowWidget * step)
+            tabWidget:SetPoint("TOPRIGHT", hostFrame, "TOPLEFT", 2 - columnIndex * (w + 2), -70 - rowWidget * step)
         elseif ns.DB.tabPos == "bottom" then
-            
-            tabWidget:SetPoint("TOPLEFT", ProfessionsFrame, "BOTTOMLEFT", 70 + (index - 1) * (w + 4), 2)
+
+            tabWidget:SetPoint("TOPLEFT", hostFrame, "BOTTOMLEFT", 70 + (index - 1) * (w + 4), 2)
         elseif useSideColumn then
             
             local columnIndex = 1 + math.floor((index - 1) / perCol)
@@ -1266,7 +1296,7 @@ function RecipeBrowserWindow.positionProfessionSideTabs()
         elseif anchor then
             tabWidget:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, -index * step)
         else
-            tabWidget:SetPoint("TOPLEFT", ProfessionsFrame, "TOPRIGHT", 0, -60 - (index - 1) * step)
+            tabWidget:SetPoint("TOPLEFT", hostFrame, "TOPRIGHT", 0, -60 - (index - 1) * step)
         end
         tabWidget:Show()
         RecipeBrowserWindow.bindTabFlip(tabWidget)
@@ -1277,17 +1307,23 @@ function RecipeBrowserWindow.positionProfessionSideTabs()
 end
 
 function RecipeBrowserWindow.onProfessionsFrameReady()
-    if not ProfessionsFrame or ProfessionsFrame.__ezprHooked then return end
-    ProfessionsFrame.__ezprHooked = true
-    ProfessionsFrame:HookScript("OnShow", function()
-        
-        C_Timer.After(0, RecipeBrowserWindow.positionProfessionSideTabs)
-        C_Timer.After(0.3, RecipeBrowserWindow.positionProfessionSideTabs)
-    end)
-    ProfessionsFrame:HookScript("OnHide", function()
-        if panelFrameEntry and panelFrameEntry.attached then panelFrameEntry:Hide() end
-    end)
-    if ProfessionsFrame:IsShown() then C_Timer.After(0, RecipeBrowserWindow.positionProfessionSideTabs) end
+    -- hook whichever profession windows this client has (each only once)
+    for _, frameName in ipairs(HOST_FRAME_NAMES) do
+        local hostFrame = _G[frameName]
+        if type(hostFrame) == "table" and hostFrame.HookScript and not hostFrame.__ezprHooked then
+            hostFrame.__ezprHooked = true
+            hostFrame:HookScript("OnShow", function()
+                C_Timer.After(0, RecipeBrowserWindow.positionProfessionSideTabs)
+                C_Timer.After(0.3, RecipeBrowserWindow.positionProfessionSideTabs)
+            end)
+            hostFrame:HookScript("OnHide", function()
+                if panelFrameEntry and panelFrameEntry.attached then panelFrameEntry:Hide() end
+                -- another profession window may still be open: move the tabs there
+                C_Timer.After(0, RecipeBrowserWindow.positionProfessionSideTabs)
+            end)
+            if hostFrame:IsShown() then C_Timer.After(0, RecipeBrowserWindow.positionProfessionSideTabs) end
+        end
+    end
 end
 
 local eventFrame = CreateFrame("Frame")
@@ -1295,20 +1331,21 @@ eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("TRADE_SKILL_SHOW")
 eventFrame:RegisterEvent("SKILL_LINES_CHANGED")
-eventFrame:RegisterEvent("TRADE_SKILL_DATA_SOURCE_CHANGED")
+pcall(eventFrame.RegisterEvent, eventFrame, "TRADE_SKILL_DATA_SOURCE_CHANGED")
 pcall(eventFrame.RegisterEvent, eventFrame, "TRADE_SKILL_LIST_UPDATE")
 pcall(eventFrame.RegisterEvent, eventFrame, "GLOBAL_MOUSE_DOWN")
+pcall(eventFrame.RegisterEvent, eventFrame, "CRAFT_SHOW")
 eventFrame:SetScript("OnEvent", function(_, event, arg1)
     if event == "ADDON_LOADED" then
         if arg1 == ADDON then
             bootstrapDB()
             if ns.RegisterBlizzardSettings then ns.RegisterBlizzardSettings() end
-        elseif arg1 == "Blizzard_Professions" then
+        elseif arg1 == "Blizzard_Professions" or arg1 == "Blizzard_TradeSkillUI" or arg1 == "Blizzard_CraftUI" then
             RecipeBrowserWindow.onProfessionsFrameReady()
         end
     elseif event == "PLAYER_LOGIN" then
-        if ProfessionsFrame then RecipeBrowserWindow.onProfessionsFrameReady() end
-    elseif event == "TRADE_SKILL_SHOW" then
+        RecipeBrowserWindow.onProfessionsFrameReady()
+    elseif event == "TRADE_SKILL_SHOW" or event == "CRAFT_SHOW" then
         RecipeBrowserWindow.onProfessionsFrameReady()
         if panelFrameEntry and panelFrameEntry.attached then panelFrameEntry:Hide() end
         C_Timer.After(0.1, RecipeBrowserWindow.positionProfessionSideTabs)
@@ -1340,7 +1377,8 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1)
             end)
         end
     elseif event == "SKILL_LINES_CHANGED" then
-        if ProfessionsFrame and ProfessionsFrame:IsShown() then C_Timer.After(0.1, RecipeBrowserWindow.positionProfessionSideTabs) end
+        local hostFrame = RecipeBrowserWindow.resolveHostFrame()
+        if hostFrame and hostFrame:IsShown() then C_Timer.After(0.1, RecipeBrowserWindow.positionProfessionSideTabs) end
     end
 end)
 
@@ -1387,9 +1425,11 @@ function RecipeBrowserWindow.onItemTooltip(tooltip, payloadData2)
     pcall(function()
         if tooltip ~= GameTooltip and tooltip ~= ItemRefTooltip then return end
         local entityID = payloadData2 and payloadData2.id
-        if not entityID and tooltip.GetItem then
+        if not entityID and type(tooltip.GetItem) == "function" then
             local _, link = tooltip:GetItem()
-            entityID = link and tonumber(link:match("item:(%d+)"))
+            if type(link) == "string" and not (issecretvalue and issecretvalue(link)) then
+                entityID = tonumber(link:match("item:(%d+)"))
+            end
         end
         RecipeBrowserWindow.appendReagentUsageLines(tooltip, tonumber(entityID))
     end)
