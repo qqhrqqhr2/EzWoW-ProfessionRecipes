@@ -145,6 +145,8 @@ function RecipeBrowserWindow.syncLearned()
             end
         end
     end
+    -- keep this character's learned recipes for the recipe item tooltips
+    if ns.RecipeStatus and ns.RecipeStatus.readOpenProfession then pcall(ns.RecipeStatus.readOpenProfession) end
 end
 
 function RecipeBrowserWindow.hasLearned(r)

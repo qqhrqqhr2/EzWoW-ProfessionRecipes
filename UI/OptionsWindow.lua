@@ -441,9 +441,12 @@ SLASH_EZWOWPROFESSIONRECIPES4 = "/전문기술"
 SlashCmdList.EZWOWPROFESSIONRECIPES = function(msg)
     msg = (msg or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
     if msg == "reset" then
+        -- settings only; the saved learned recipes of your characters are kept
+        local keepKnown = ns.DB and ns.DB.known
         EzWoW_ProfessionRecipesDB = nil
         EzWoW_ProfessionRecipesDB = nil
         bootstrapDB()
+        if keepKnown then ns.DB.known = keepKnown end
         positionProfessionSideTabs()
         ns.RefreshTexts()
         if ns.settingsFrame then ns.settingsFrame:UpdateTexts() end
