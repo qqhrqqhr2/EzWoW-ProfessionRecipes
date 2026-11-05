@@ -491,6 +491,8 @@ SlashCmdList.EZWOWPROFESSIONRECIPES = function(msg)
             ns.DB.iconSize = nodeEntry
             positionProfessionSideTabs()
             print("|cffeba86aEzWoW - Profession Recipes|r: icon " .. nodeEntry)
+        else
+            print("|cffeba86aEzWoW - Profession Recipes|r: " .. L.iconSizeRange:format(16, 48))
         end
         return
     elseif msg == "help" or msg == "?" then
