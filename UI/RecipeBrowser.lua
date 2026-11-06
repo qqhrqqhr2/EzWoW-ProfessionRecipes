@@ -1308,12 +1308,15 @@ function RecipeBrowserWindow.positionProfessionSideTabs()
     ns.UpdateTabChecks()
 end
 
+-- profession windows already hooked (kept here: a field written on the game's frame would taint it)
+local hookedHosts = setmetatable({}, { __mode = "k" })
+
 function RecipeBrowserWindow.onProfessionsFrameReady()
     -- hook whichever profession windows this client has (each only once)
     for _, frameName in ipairs(HOST_FRAME_NAMES) do
         local hostFrame = _G[frameName]
-        if type(hostFrame) == "table" and hostFrame.HookScript and not hostFrame.__ezprHooked then
-            hostFrame.__ezprHooked = true
+        if type(hostFrame) == "table" and hostFrame.HookScript and not hookedHosts[hostFrame] then
+            hookedHosts[hostFrame] = true
             hostFrame:HookScript("OnShow", function()
                 C_Timer.After(0, RecipeBrowserWindow.positionProfessionSideTabs)
                 C_Timer.After(0.3, RecipeBrowserWindow.positionProfessionSideTabs)

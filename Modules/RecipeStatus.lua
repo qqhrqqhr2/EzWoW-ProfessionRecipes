@@ -46,6 +46,13 @@ function RecipeStatus.myRecord()
     if type(rec) ~= "table" then rec = {}; db[key] = rec end
     rec.name = UnitName and UnitName("player") or rec.name
     rec.realm = GetRealmName and GetRealmName() or rec.realm
+    -- second UnitName value is the surname on this client (shown, never part of the key)
+    if UnitName then
+        local _, surname = UnitName("player")
+        if type(surname) == "string" and surname ~= "" and not isSecret(surname) and surname ~= rec.realm then
+            rec.surname = surname
+        end
+    end
     if UnitClass then local _, class = UnitClass("player"); rec.class = class or rec.class end
     if type(rec.profs) ~= "table" then rec.profs = {} end
     return rec
@@ -193,6 +200,11 @@ local CLASS_COLORS = _G.RAID_CLASS_COLORS
 
 local function charLabel(rec, key)
     local label = rec.name or key
+    if rec.name and type(rec.surname) == "string" and rec.surname ~= "" then
+        local consts = Constants and Constants.CharacterNameSeparatorConsts
+        local sep = consts and consts.CHARACTERNAME_SURNAME_SEPARATOR
+        label = rec.name .. ((type(sep) == "string" and sep ~= "" and not isSecret(sep)) and sep or " ") .. rec.surname
+    end
     if rec.realm and GetRealmName and rec.realm ~= GetRealmName() then label = label .. "-" .. rec.realm end
     local color = CLASS_COLORS and rec.class and CLASS_COLORS[rec.class]
     if color and color.colorStr then return "|c" .. color.colorStr .. label .. "|r" end
@@ -263,18 +275,22 @@ local function tooltipItem(tooltip, data)
     return itemID, name
 end
 
+-- item already handled per tooltip; kept in our own table (fields written on the
+-- game's tooltip frames would taint them)
+local shownItem = setmetatable({}, { __mode = "k" })
+
 function RecipeStatus.onItemTooltip(tooltip, data)
     pcall(function()
         if tooltip ~= GameTooltip and tooltip ~= ItemRefTooltip then return end
         if tooltip.IsForbidden and tooltip:IsForbidden() then return end
         local itemID, name = tooltipItem(tooltip, data)
-        if not itemID or tooltip.ezprRecipeStatusID == itemID then return end
-        tooltip.ezprRecipeStatusID = itemID
+        if not itemID or shownItem[tooltip] == itemID then return end
+        shownItem[tooltip] = itemID
         RecipeStatus.addLines(tooltip, itemID, name)
     end)
 end
 
-local function clearMark(tooltip) tooltip.ezprRecipeStatusID = nil end
+local function clearMark(tooltip) shownItem[tooltip] = nil end
 for _, tooltip in ipairs({ GameTooltip, ItemRefTooltip }) do
     if tooltip and tooltip.HookScript then pcall(tooltip.HookScript, tooltip, "OnTooltipCleared", clearMark) end
 end
