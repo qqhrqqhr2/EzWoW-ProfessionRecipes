@@ -251,6 +251,7 @@ function RecipeStatus.addLines(tooltip, itemID, itemName)
         table.sort(names)
         tooltip:AddLine(L.recipeKnownBy:format(table.concat(names, ", ")), 0.65, 0.73, 0.78, true)
     end
+    if ns.NoteTooltipLines then ns.NoteTooltipLines(tooltip) end
 end
 
 local function tooltipItem(tooltip, data)
@@ -275,6 +276,17 @@ local function tooltipItem(tooltip, data)
     return itemID, name
 end
 
+-- EzWoW-Tooltip asks this before adding its own learned/not-learned mark on a recipe item,
+-- so only this (more detailed) status line shows.
+function ns.CoversRecipeStatus(tooltip, itemID)
+    if tooltip ~= GameTooltip and tooltip ~= ItemRefTooltip then return false end
+    if type(itemID) ~= "number" or isSecret(itemID) then return false end
+    local name = C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(itemID)
+    if type(name) ~= "string" or isSecret(name) then return false end
+    local ok, found = pcall(RecipeStatus.findRecipe, itemID, name)
+    return ok and found ~= nil
+end
+
 -- item already handled per tooltip; kept in our own table (fields written on the
 -- game's tooltip frames would taint them)
 local shownItem = setmetatable({}, { __mode = "k" })
@@ -288,6 +300,10 @@ function RecipeStatus.onItemTooltip(tooltip, data)
         shownItem[tooltip] = itemID
         RecipeStatus.addLines(tooltip, itemID, name)
     end)
+    -- last item hook of this addon: one attribution line under everything it added
+    if (tooltip == GameTooltip or tooltip == ItemRefTooltip) and ns.FlushTooltipTag then
+        pcall(ns.FlushTooltipTag, tooltip)
+    end
 end
 
 local function clearMark(tooltip) shownItem[tooltip] = nil end

@@ -3,6 +3,71 @@
 -- Modules/QuickAction.lua : Modifier-Driven Disenchant/Mill/Prospect Floating Action Button
 --===========================================================================
 local ADDON, ns = ...
+
+-- The "EzWoW - ..." name line at the end of tooltip additions is drawn small.
+-- Shared by the EzWoW addons: the first one loaded sets it up.
+if not (_G.EzWoWTooltipTagSizer and _G.EzWoWTooltipTagSizer.version == 3) then
+    local sizer = {}
+    sizer.version = 3
+    _G.EzWoWTooltipTagSizer = sizer
+    local smallFont
+    local original = setmetatable({}, { __mode = "k" })   -- font string -> its own font object
+    local function tagFont()
+        if not smallFont and CreateFont then
+            smallFont = _G.EzWoWTooltipTagFont or CreateFont("EzWoWTooltipTagFont")
+            smallFont:CopyFontObject(GameTooltipTextSmall or GameTooltipText)
+            local path, _, flags = smallFont:GetFont()
+            if path then smallFont:SetFont(path, 8, flags) end
+        end
+        return smallFont
+    end
+    local function isTag(text)
+        if type(text) ~= "string" or (issecretvalue and issecretvalue(text)) then return false end
+        return text:find("^EzWoW %- ") ~= nil
+    end
+    local function fit(fs, tag)
+        if not fs then return end
+        if tag then
+            if not original[fs] then original[fs] = fs:GetFontObject() or GameTooltipText end
+            if tagFont() then fs:SetFontObject(smallFont) end
+            fs:SetTextColor(0.5, 0.5, 0.5)
+        elseif original[fs] then
+            fs:SetFontObject(original[fs])
+            original[fs] = nil
+        end
+    end
+    function sizer.Refit(tip)
+        local name = tip and tip.GetName and tip:GetName()
+        if type(name) ~= "string" then return end
+        local ok, count = pcall(tip.NumLines, tip)
+        if not ok or type(count) ~= "number" or (issecretvalue and issecretvalue(count)) then return end
+        for i = 1, count do
+            local right = _G[name .. "TextRight" .. i]
+            if right then fit(right, isTag(right:GetText())) end
+            -- line 1 is the tooltip's title: a left "EzWoW - ..." there stays big
+            local left = _G[name .. "TextLeft" .. i]
+            if left then fit(left, i > 1 and isTag(left:GetText())) end
+        end
+    end
+    local function restore(tip)
+        local name = tip and tip.GetName and tip:GetName()
+        if type(name) ~= "string" then return end
+        local rightPrefix, leftPrefix = name .. "TextRight", name .. "TextLeft"
+        for fs, font in pairs(original) do
+            local fsName = fs.GetName and fs:GetName()
+            if type(fsName) == "string" and (fsName:find(rightPrefix, 1, true) == 1 or fsName:find(leftPrefix, 1, true) == 1) then
+                fs:SetFontObject(font)
+                original[fs] = nil
+            end
+        end
+    end
+    for _, tip in ipairs({ GameTooltip, ItemRefTooltip, ShoppingTooltip1, ShoppingTooltip2 }) do
+        if tip then
+            pcall(hooksecurefunc, tip, "Show", function(self) pcall(sizer.Refit, self) end)
+            pcall(tip.HookScript, tip, "OnTooltipCleared", function(self) pcall(restore, self) end)
+        end
+    end
+end
 local type, pairs, ipairs, tonumber, tostring, select, pcall = type, pairs, ipairs, tonumber, tostring, select, pcall
 
 local QuickCraftAdvisor = ns.QuickCraftAdvisor or {}
@@ -451,7 +516,47 @@ function QuickCraftAdvisor.refreshKeyDirection()
 end
 QuickCraftAdvisor.refreshKeyDirection()
 
-function QuickCraftAdvisor.tooltipHelp(msg, color)
+-----------------------------------------------------------------------------
+-- Attribution line under this addon's lines on a game tooltip
+-----------------------------------------------------------------------------
+-- The item hooks of this addon (quick action hint, reagent usage, recipe status) note their
+-- lines; the last of them adds one attribution line for all, once per tooltip display.
+-- A hover of this addon's own button holds it (same frame) until its hint line is in.
+local TAG_TITLE = "EzWoW - Profession Recipes"
+local tagDone = setmetatable({}, { __mode = "k" })
+local tagPending = setmetatable({}, { __mode = "k" })
+local tagHooked = setmetatable({}, { __mode = "k" })
+local tagHold, tagHoldTime
+
+function ns.NoteTooltipLines(tooltip)
+    if type(tooltip) ~= "table" then return end
+    if not tagHooked[tooltip] and type(tooltip.HookScript) == "function" then
+        tagHooked[tooltip] = true
+        pcall(tooltip.HookScript, tooltip, "OnTooltipCleared", function(t) tagDone[t] = nil; tagPending[t] = nil end)
+    end
+    tagPending[tooltip] = true
+end
+
+function ns.FlushTooltipTag(tooltip)
+    if type(tooltip) ~= "table" or not tagPending[tooltip] or tagDone[tooltip] then return false end
+    if tagHold == tooltip and tagHoldTime == GetTime() then return false end
+    if type(tooltip.AddDoubleLine) ~= "function" then return false end
+    tagPending[tooltip] = nil
+    tagDone[tooltip] = true
+    tooltip:AddDoubleLine(" ", TAG_TITLE, 0, 0, 0, 0.5, 0.5, 0.5)
+    return true
+end
+
+function QuickCraftAdvisor.holdTooltipTag(tooltip, on)
+    if on then
+        tagHold, tagHoldTime = tooltip, GetTime()
+    elseif tagHold == tooltip then
+        tagHold, tagHoldTime = nil, nil
+    end
+end
+
+-- deferTag: called from an item hook; the recipe status hook that runs after it adds the line.
+function QuickCraftAdvisor.tooltipHelp(msg, color, deferTag)
     if not GameTooltip then return end
     GameTooltip:AddLine(" ")
     if color then
@@ -459,6 +564,8 @@ function QuickCraftAdvisor.tooltipHelp(msg, color)
     else
         GameTooltip:AddLine(msg)
     end
+    ns.NoteTooltipLines(GameTooltip)
+    if not deferTag then ns.FlushTooltipTag(GameTooltip) end
     GameTooltip:Show()
 end
 
@@ -472,6 +579,7 @@ function QuickCraftAdvisor.presentQuickButtonTooltip(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
     end
 
+    QuickCraftAdvisor.holdTooltipTag(GameTooltip, true)
     if self.itemLink and GameTooltip.SetHyperlink then
         GameTooltip:SetHyperlink(self.itemLink)
     elseif GameTooltip.SetBagItem then
@@ -481,6 +589,7 @@ function QuickCraftAdvisor.presentQuickButtonTooltip(self)
             GameTooltip:SetBagItem(bag, slot)
         end
     end
+    QuickCraftAdvisor.holdTooltipTag(GameTooltip, false)
 
     local L = ns.GetActiveLocaleTable and ns.GetActiveLocaleTable() or {}
     if self.spellID then
@@ -488,6 +597,8 @@ function QuickCraftAdvisor.presentQuickButtonTooltip(self)
     elseif self.itemID then
         local itemName = (ns.ItemName and ns.ItemName(self.itemID)) or ("#" .. self.itemID)
         QuickCraftAdvisor.tooltipHelp((L.clickToUse or "Left-Click to use %s"):format(itemName))
+    elseif ns.FlushTooltipTag(GameTooltip) then
+        GameTooltip:Show()
     end
 end
 
@@ -690,7 +801,7 @@ function QuickCraftAdvisor.processTooltipItem(tooltip, itemID, bagID, slotID, st
     if not action then return end
 
     if action == "error" then
-        QuickCraftAdvisor.tooltipHelp(idOrMsg, color)
+        QuickCraftAdvisor.tooltipHelp(idOrMsg, color, QuickCraftAdvisor.inItemHook)
     elseif action == "spell" then
         if hasTrade and color ~= COLORS.openable then return end
         QuickActionButton:ApplySpell(bagID, slotID, tradeItemLink, idOrMsg, color)
@@ -730,6 +841,12 @@ function QuickCraftAdvisor.resolveTooltipItemLink(tooltip, data)
 end
 
 function QuickCraftAdvisor.onTooltipPostCall(tooltip, data)
+    QuickCraftAdvisor.inItemHook = true
+    pcall(QuickCraftAdvisor.inspectPostCall, tooltip, data)
+    QuickCraftAdvisor.inItemHook = false
+end
+
+function QuickCraftAdvisor.inspectPostCall(tooltip, data)
     pcall(function()
         if not (tooltip and tooltip == GameTooltip) then return end
         if tooltip.IsForbidden and tooltip:IsForbidden() then return end
@@ -786,6 +903,9 @@ function QuickCraftAdvisor.configureTooltipHooks()
         end
     end
 end
+-- Registered while the files load, so this hook runs before the reagent usage and recipe
+-- status hooks of this addon and the attribution line (added by the last one) ends the block.
+QuickCraftAdvisor.configureTooltipHooks()
 
 local qev = CreateFrame("Frame")
 qev:RegisterEvent("PLAYER_LOGIN")

@@ -25,7 +25,7 @@ WoW Forever (`Interface: 16001`) · `/ezpr`
 
 ![설정창](docs/images/settings_ko.png)
 
-> 이미지는 애드온 코드의 창 크기·좌표·색상·문구와 내장 제조법 데이터(연금술)로 재현한 **예시 화면**입니다.
+> 이미지는 애드온 코드의 창 크기·좌표·색상·문구와 내장 제조법 데이터(연금술)로 재현한 **예시 화면**입니다. 캐릭터 이름은 지어낸 예시입니다.
 
 ### 설치
 
@@ -42,9 +42,9 @@ WoW Forever (`Interface: 16001`) · `/ezpr`
 | ③ | 필터 ▼ | 포에버 신규만 · 숙련 225 이하만 · 배운 것 숨기기 · 지금 배울 수 있는 것만 · 모든 전문 기술에서 검색 · 다른 진영 제조법 숨기기 |
 | ④ | 제조법 목록 | 분류별로 접고 펼칩니다. 오른쪽 숫자는 필요 숙련도이며 내 숙련 기준 색(빨강 배울 수 없음 · 주황 · 노랑 · 초록 · 회색)으로 표시됩니다. 이름 뒤 `*`는 포에버 신규 제조법입니다. |
 | ⑤ | 상세 정보 | 숙련 단계(주황/노랑/초록/회색), 제작 수량, 배우는 곳(교관, 진영별 판매 상인과 좌표 · 상인의 호의 가격, 드랍 지역, 퀘스트), 재료와 개수. |
-| ⑥ | 지도에서 찾기 | `EzWoW-MapFinder`로 도안 판매 상인 · 전문가 · 퀘스트 · 획득처를 월드맵에서 찾습니다. 목록의 제조법이나 재료를 **우클릭**해도 같습니다. |
+| ⑥ | 지도에서 찾기 | `EzWoW - Map Finder`로 도안 판매 상인 · 전문가 · 퀘스트 · 획득처를 월드맵에서 찾습니다. 목록의 제조법이나 재료를 **우클릭**해도 같습니다. |
 | ⑦ | 재료 툴팁 | 가방·상점 아이템 툴팁에 그 재료가 쓰이는 제조법 수를 전문 기술별로 표시합니다. **Shift**를 누르면 제조법 이름과 숙련도 목록이 나옵니다. |
-| ⑧ | 제조법 아이템 툴팁 | 도안·제조법 아이템 툴팁에 **배움 / 배울 수 있음 (숙련 N 필요) / 숙련 부족**과, 이미 배운 **내 다른 캐릭터**를 표시합니다. 각 캐릭터로 전문 기술 창을 한 번 열면 배운 제조법이 저장됩니다. |
+| ⑧ | 제조법 아이템 툴팁 | 도안·제조법 아이템 툴팁에 **배움 / 배울 수 있음 (숙련 N 필요) / 숙련 부족**과, 이미 배운 **내 다른 캐릭터**(이름 성, 직업 색)를 표시합니다. 각 캐릭터로 전문 기술 창을 한 번 열면 배운 제조법이 저장됩니다. |
 
 #### 원클릭 아이템 실행 (기본 `Alt`)
 
@@ -62,7 +62,7 @@ WoW Forever (`Interface: 16001`) · `/ezpr`
 
 | 번호 | 항목 | 설명 | 기본값 |
 |---|---|---|---|
-| ① | 언어 | 자동(게임 언어) 또는 8개 언어. 게임과 다른 문자의 언어를 고르면 일부 글자가 깨질 수 있습니다. | 자동 |
+| ① | 언어 | 상자를 누르고 목록에서 자동(게임 언어) 또는 8개 언어를 고릅니다. 게임과 다른 문자의 언어를 고르면 일부 글자가 깨질 수 있습니다. | 자동 |
 | ② | 전문기술 창 탭 부착 위치 | 왼쪽 / 아래 / 오른쪽 | 왼쪽 |
 | ③ | 탭 아이콘 크기 | 16~48 | 30 |
 | ④ | 아이템 툴팁에 사용처(제조법 목록) 표시 | 재료 툴팁 | 켬 |
@@ -86,7 +86,12 @@ WoW Forever (`Interface: 16001`) · `/ezpr`
 
 ### 저장 데이터
 
-- `EzWoW_ProfessionRecipesDB`: 설정, 필터, 접힌 분류, 단독 창 위치.
+- `EzWoW_ProfessionRecipesDB`: 설정, 필터, 접힌 분류, 단독 창 위치, 캐릭터별 배운 제조법(제조법 아이템 툴팁용).
+
+### 다른 EzWoW 애드온과 함께 쓰기
+
+- **EzWoW - Tooltip**: 이 애드온이 재료 툴팁의 “제조법 재료” 줄이나 제조법 아이템의 배움 상태를 보여 주면, EzWoW - Tooltip은 같은 아이템에서 자기 “재료 사용처” 줄과 도안 수집 상태 줄을 생략합니다. 같은 정보가 두 번 나오지 않습니다.
+- **EzWoW - Map Finder**: 지도에서 찾기와 우클릭 위치 검색에 필요합니다.
 
 ---
 
@@ -104,7 +109,7 @@ Professions: Alchemy · Blacksmithing · Enchanting · Engineering · Leatherwor
 
 ![Settings window](docs/images/settings_en.png)
 
-> These are **mock-ups** rebuilt from the window sizes, coordinates, colours and strings in the code and the bundled recipe data (Alchemy).
+> These are **mock-ups** rebuilt from the window sizes, coordinates, colours and strings in the code and the bundled recipe data (Alchemy). Character names are made up.
 
 ### Installation
 
@@ -121,9 +126,9 @@ Professions: Alchemy · Blacksmithing · Enchanting · Engineering · Leatherwor
 | ③ | Filter ▼ | Forever new only · Skill 225 or less · Hide learned · Learnable now only · Search all professions · Hide other faction's recipes |
 | ④ | Recipe list | Fold by category. The number is the required skill, coloured against your skill (red not yet · orange · yellow · green · grey). `*` after the name marks a Forever-new recipe. |
 | ⑤ | Details | Skill steps (orange/yellow/green/grey), quantity created, where to learn (trainer, faction vendors with coordinates and Merchant's Favor price, drop zones, quests) and reagents. |
-| ⑥ | Find on Map | Uses `EzWoW-MapFinder` to show recipe vendors, trainers, quests and sources on the World Map. **Right-clicking** a recipe or reagent does the same. |
+| ⑥ | Find on Map | Uses `EzWoW - Map Finder` to show recipe vendors, trainers, quests and sources on the World Map. **Right-clicking** a recipe or reagent does the same. |
 | ⑦ | Reagent tooltip | Bag and vendor tooltips show how many recipes per profession use the item. Hold **Shift** for recipe names and skill levels. |
-| ⑧ | Recipe item tooltip | Recipe items show **Learned / Can learn (requires skill N) / Skill too low** and which of **your other characters** already know it. Open the profession window once on each character to save its learned recipes. |
+| ⑧ | Recipe item tooltip | Recipe items show **Learned / Can learn (requires skill N) / Skill too low** and which of **your other characters** already know it (first name and surname, class colour). Open the profession window once on each character to save its learned recipes. |
 
 #### One-click item actions (default `Alt`)
 
@@ -141,7 +146,7 @@ Choose the modifier in settings: `Alt` / `Alt + Ctrl` / `Alt + Shift` / `Off`.
 
 | No. | Option | Description | Default |
 |---|---|---|---|
-| ① | Language | Auto (game language) or 8 languages. A script different from your client may show missing characters. | Auto |
+| ① | Language | Click the box and pick Auto (game language) or one of 8 languages from the list. A script different from your client may show missing characters. | Auto |
 | ② | Tab position | Left / Bottom / Right | Left |
 | ③ | Tab icon size | 16–48 | 30 |
 | ④ | Show recipes that use an item in its tooltip | Reagent tooltip | On |
@@ -165,7 +170,12 @@ Filter defaults: Hide learned on, Hide other faction's recipes on, the rest off.
 
 ### Saved data
 
-- `EzWoW_ProfessionRecipesDB`: settings, filters, collapsed categories, standalone window position.
+- `EzWoW_ProfessionRecipesDB`: settings, filters, collapsed categories, standalone window position, learned recipes per character (for recipe item tooltips).
+
+### Working with other EzWoW addons
+
+- **EzWoW - Tooltip**: when this addon shows the “Reagent for” lines on a reagent or the learned status on a recipe item, EzWoW - Tooltip leaves out its own “Used In” and recipe collection lines for that item, so nothing shows twice.
+- **EzWoW - Map Finder**: needed for Find on Map and right-click map search.
 
 ---
 

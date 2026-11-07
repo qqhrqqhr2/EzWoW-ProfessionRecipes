@@ -1390,11 +1390,12 @@ end)
 -----------------------------------------------------------------------------
 -- Append Reagent Usage Lines
 -----------------------------------------------------------------------------
-function RecipeBrowserWindow.appendReagentUsageLines(tooltip, itemID)
-    if not (ns.DB and ns.DB.reagentTooltip) or not itemID then return end
+-- Recipes that use the item, grouped by profession (nil when the option is off or none).
+function RecipeBrowserWindow.collectReagentUsage(itemID)
+    if not (ns.DB and ns.DB.reagentTooltip) or not itemID then return nil end
     constructRecipeLookupIndex()
     local list = ns.GetReagentIndex()[itemID]
-    if not list or #list == 0 then return end
+    if not list or #list == 0 then return nil end
     local byProf, order = {}, {}
     for _, r in ipairs(list) do
         local profIDVal = ns.ResolveRecipeProfessionKey()[r]
@@ -1404,7 +1405,19 @@ function RecipeBrowserWindow.appendReagentUsageLines(tooltip, itemID)
             table.insert(byProf[profIDVal], r)
         end
     end
-    if #order == 0 then return end
+    if #order == 0 then return nil end
+    return byProf, order
+end
+
+-- EzWoW-Tooltip asks this before adding its own "used in" line, so only one of them shows.
+function ns.CoversReagentUsage(tooltip, itemID)
+    if tooltip ~= GameTooltip and tooltip ~= ItemRefTooltip then return false end
+    return RecipeBrowserWindow.collectReagentUsage(tonumber(itemID)) ~= nil
+end
+
+function RecipeBrowserWindow.appendReagentUsageLines(tooltip, itemID)
+    local byProf, order = RecipeBrowserWindow.collectReagentUsage(itemID)
+    if not byProf then return end
     table.sort(order, function(a, b) return #byProf[a] > #byProf[b] end)
     tooltip:AddLine(" ")
     tooltip:AddLine("|cff66ccff" .. L.usedIn .. "|r")
@@ -1423,6 +1436,8 @@ function RecipeBrowserWindow.appendReagentUsageLines(tooltip, itemID)
         end
     end
     if not shift then tooltip:AddLine(L.shiftForList, 0.5, 0.5, 0.5) end
+    -- the recipe status hook (runs right after this one) adds the attribution line
+    if ns.NoteTooltipLines then ns.NoteTooltipLines(tooltip) end
 end
 
 function RecipeBrowserWindow.onItemTooltip(tooltip, payloadData2)
