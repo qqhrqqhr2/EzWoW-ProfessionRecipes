@@ -46,6 +46,8 @@ WoW Forever (`Interface: 16001`) · `/ezpr`
 | ⑦ | 재료 툴팁 | 가방·상점 아이템 툴팁에 그 재료가 쓰이는 제조법 수를 전문 기술별로 표시합니다. **Shift**를 누르면 제조법 이름과 숙련도 목록이 나옵니다. |
 | ⑧ | 제조법 아이템 툴팁 | 도안·제조법 아이템 툴팁에 **배움 / 배울 수 있음 (숙련 N 필요) / 숙련 부족**과, 이미 배운 **내 다른 캐릭터**(이름 성, 직업 색)를 표시합니다. 각 캐릭터로 전문 기술 창을 한 번 열면 배운 제조법이 저장됩니다. |
 
+툴팁에 이 애드온이 줄을 추가하면 그 아래 오른쪽에 `EzWoW - Profession Recipes`가 작은 회색 글씨로 한 번만 표시됩니다.
+
 #### 원클릭 아이템 실행 (기본 `Alt`)
 
 가방 아이템 위에서 보조키를 누른 채 **좌클릭**하면 바로 실행합니다.
@@ -76,12 +78,12 @@ WoW Forever (`Interface: 16001`) · `/ezpr`
 | 명령어 | 설명 |
 |---|---|
 | `/ezpr` | 단독 제조법 창 열기/닫기 |
-| `/ezpr config` (`설정`) | 설정창 |
+| `/ezpr config` (`settings`, `설정`) | 설정창 |
 | `/ezpr side` · `bottom` · `left` | 탭 부착 위치 오른쪽 · 아래 · 왼쪽 |
 | `/ezpr icon 16~48` | 탭 아이콘 크기 |
 | `/ezpr quick <alt\|ctrl\|shift\|off>` | 빠른 실행 보조키 (`ctrl` = Alt+Ctrl, `shift` = Alt+Shift) |
 | `/ezpr lang <auto\|ko\|en\|de\|fr\|es\|ru\|cn\|tw>` | 표시 언어 변경 |
-| `/ezpr reset` | 모든 설정 초기화 |
+| `/ezpr reset` | 모든 설정 초기화 (캐릭터별 배운 제조법 기록은 유지) |
 | `/ezpr help` | 도움말 |
 
 ### 저장 데이터
@@ -130,6 +132,8 @@ Professions: Alchemy · Blacksmithing · Enchanting · Engineering · Leatherwor
 | ⑦ | Reagent tooltip | Bag and vendor tooltips show how many recipes per profession use the item. Hold **Shift** for recipe names and skill levels. |
 | ⑧ | Recipe item tooltip | Recipe items show **Learned / Can learn (requires skill N) / Skill too low** and which of **your other characters** already know it (first name and surname, class colour). Open the profession window once on each character to save its learned recipes. |
 
+When this addon adds lines to a tooltip, `EzWoW - Profession Recipes` appears once below them on the right in small grey text.
+
 #### One-click item actions (default `Alt`)
 
 Hold the modifier and **left-click** a bag item:
@@ -160,12 +164,12 @@ Filter defaults: Hide learned on, Hide other faction's recipes on, the rest off.
 | Command | Description |
 |---|---|
 | `/ezpr` | Open/close the standalone recipe window |
-| `/ezpr config` | Settings |
+| `/ezpr config` (`settings`) | Settings |
 | `/ezpr side` · `bottom` · `left` | Attach tabs right · bottom · left |
 | `/ezpr icon 16-48` | Tab icon size |
 | `/ezpr quick <alt\|ctrl\|shift\|off>` | Quick-action modifier (`ctrl` = Alt+Ctrl, `shift` = Alt+Shift) |
 | `/ezpr lang <auto\|ko\|en\|de\|fr\|es\|ru\|cn\|tw>` | Change display language |
-| `/ezpr reset` | Reset all settings |
+| `/ezpr reset` | Reset all settings (learned recipes saved per character are kept) |
 | `/ezpr help` | Help |
 
 ### Saved data

@@ -25,6 +25,7 @@ A recipe book for WoW Forever: **12 professions and all their recipes** (camping
 ### Tooltips
 - **Reagents**: how many recipes use the item, per profession; hold Shift for the recipe names.
 - **Recipe items**: Learned / Can learn (requires skill N) / Skill too low, plus your other characters who already know it, shown as first name and surname in class colour.
+- The addon name is shown once, in small grey text, under the lines it adds.
 
 ### One-click item actions (default Alt)
 - Hold the key and left-click a bag item to disenchant, pick a lock, use a skeleton key or unlocking scroll, decipher a Forever scroll or feed your pet.
@@ -39,6 +40,7 @@ A recipe book for WoW Forever: **12 professions and all their recipes** (camping
 - `/ezpr left|bottom|side` — tab position
 - `/ezpr quick alt|ctrl|shift|off` — one-click action key
 - `/ezpr lang auto|ko|en|de|fr|es|ru|cn|tw` — change the language
+- `/ezpr reset` — reset settings (learned recipes saved per character are kept)
 
 Languages: English, 한국어, Deutsch, Français, Español, Русский, 简体中文, 繁體中文.
 
@@ -65,6 +67,7 @@ WoW Forever용 제조법 도감입니다. **12개 전문 기술의 모든 제조
 ### 툴팁
 - **재료**: 그 재료를 쓰는 제조법 수를 전문 기술별로 표시하고, Shift를 누르면 제조법 이름 목록.
 - **제조법 아이템**: 배움 / 배울 수 있음(숙련 N 필요) / 숙련 부족과, 이미 배운 내 다른 캐릭터를 "이름 성"(직업 색)으로 표시.
+- 이 애드온이 추가한 줄 아래에 애드온 이름을 작은 회색 글씨로 한 번만 표시합니다.
 
 ### 원클릭 아이템 실행 (기본 Alt)
 - 키를 누른 채 가방 아이템을 좌클릭하면 마력 추출 · 자물쇠 따기 · 해골 열쇠 · 잠금 해제 두루마리 · 포에버 두루마리 해독 · 야수 먹이 주기를 바로 실행합니다.
@@ -79,5 +82,6 @@ WoW Forever용 제조법 도감입니다. **12개 전문 기술의 모든 제조
 - `/ezpr left|bottom|side` — 탭 부착 위치
 - `/ezpr quick alt|ctrl|shift|off` — 빠른 실행 키
 - `/ezpr lang auto|ko|en|de|fr|es|ru|cn|tw` — 언어 변경
+- `/ezpr reset` — 설정 초기화(캐릭터별 배운 제조법 기록은 유지)
 
 지원 언어: English, 한국어, Deutsch, Français, Español, Русский, 简体中文, 繁體中文.

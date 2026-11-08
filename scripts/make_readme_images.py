@@ -640,19 +640,21 @@ def ui_page(lang, ctx):
         menu.append(text(8 + 26, 8 + i * 24 + 11, esc(L[k]), 12, "#fff"))
     parts.append(f'<div class="abs" style="left:{fx:.0f}px;top:{fy:.0f}px;width:{px(220)};height:{px(mh)};background:rgba(18,24,31,.96);'
                  f'border:1px solid {css(th["border"])};z-index:40">{"".join(menu)}</div>')
-    # tooltips on the right
+    # tooltips on the right; the addon adds its name once, small and grey, under its own lines
+    TAG_LINE = (f'<span style="display:block;text-align:right;color:#808080;font-size:{px(8)};line-height:1.3">'
+                f'EzWoW - Profession Recipes</span>')
     tx = ox + W * S + 24
     rlines = [f'<span style="color:#fff">{esc(t["tipReag"])}</span>', f'<span style="color:#66bbff">{esc(t["tipReagType"])}</span>', ("gap",),
               f'<span style="color:#66ccff">{esc(L["usedIn"])}</span>',
               f'<span style="color:#ffd100">{esc(L["usedInLine"].replace("%s", t["prof"]).replace("%d", "11"))}</span>',
               f'<span style="color:#ffd100">{esc(L["usedInLine"].replace("%s", t["prof2"]).replace("%d", "1"))}</span>',
-              f'<span style="color:#808080">{esc(L["shiftForList"])}</span>']
+              f'<span style="color:#808080">{esc(L["shiftForList"])}</span>', TAG_LINE]
     parts.append(tooltip(tx, oy + 10, rlines, gloss=False, bg="rgba(8,12,18,.96)", border="#5d6d7a"))
     names = ", ".join(f'<span style="color:{CLASS_HEX[c]}">{esc(n)}</span>' for n, c in t["known"])
     clines = [f'<span style="color:{QUALITY[2]}">{esc(t["tipRecipe"])}</span>', f'<span style="color:#fff">{esc(t["tipRecipeType"])}</span>',
               f'<span style="color:#fff">{esc(t["tipReq"])}</span>',
               f'<span style="color:#ffd100">{esc(L["recipeCanLearn"].replace("%d", "65"))}</span>',
-              f'<span style="color:#a6bac7;white-space:normal">{esc(L["recipeKnownBy"].replace("%s", "§"))}</span>'.replace("§", names)]
+              f'<span style="color:#a6bac7;white-space:normal">{esc(L["recipeKnownBy"].replace("%s", "§"))}</span>'.replace("§", names), TAG_LINE]
     parts.append(tooltip(tx, oy + 220, clines, gloss=False, bg="rgba(8,12,18,.96)", border=QUALITY[2], width=(PAGE_W - 40 - tx) / S))
     calls = [(sx - 4, oy + 26), (ox + 72 * S - 4, oy + 36 * S - 6), (fx, fy), (ox + 300 * S, oy + 64 * S),
              (ox + dx * S - 4, oy + 150 * S), (ox + (dx + dw - 14 - 102) * S - 6, oy + 14 * S), (tx, oy + 10), (tx, oy + 220)]
