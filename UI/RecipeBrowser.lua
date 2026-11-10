@@ -503,7 +503,10 @@ function RecipeBrowserWindow.launchInMapFinder(query)
             pcall(loader, "EzWoW_MapFinder")
         end
     end
-    if WorldMapFrame and not WorldMapFrame:IsShown() then
+    -- with the gamepad on, a map opened by addon code taints the gamepad
+    -- navigation (Libs/EzWoWGamePad): the search only runs on an open map
+    local padOn = ns.GamePad and ns.GamePad.IsActive()
+    if WorldMapFrame and not WorldMapFrame:IsShown() and not padOn then
         if ToggleWorldMap then
             pcall(ToggleWorldMap)
         elseif ShowUIPanel then
@@ -566,7 +569,10 @@ function RecipeBrowserWindow.buildProfessionBrowserWindow()
     end
     windowFrame.CloseButton:SetScript("OnClick", function()
         windowFrame:Hide()
-        if windowFrame.attached and ProfessionsFrame and ProfessionsFrame:IsShown() then
+        -- (not with the gamepad on: a game window closed by addon code taints
+        -- the gamepad navigation, see Libs/EzWoWGamePad)
+        if windowFrame.attached and ProfessionsFrame and ProfessionsFrame:IsShown()
+            and not (ns.GamePad and ns.GamePad.IsActive()) then
             HideUIPanel(ProfessionsFrame)
         end
     end)

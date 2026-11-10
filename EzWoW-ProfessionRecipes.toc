@@ -22,10 +22,12 @@
 ## Author: qqhrqqhr2
 ## Version: 2.0.9
 ## Category: EzWoW
-## SavedVariables: EzWoW_ProfessionRecipesDB
+## SavedVariables: EzWoW_ProfessionRecipesDB, EzWoW_SharedData
 ## IconTexture: Interface\AddOns\EzWoW-ProfessionRecipes\Icon
 ## X-Curse-Project-ID: 1729781
 
+Libs\EzWoWGamePad\GamePad.lua
+Libs\EzWoWShare\Share.lua
 Data\RecipeData.lua
 Core\Init.lua
 Core\UIKit.lua
