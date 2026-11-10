@@ -1,9 +1,11 @@
-# v2.0.9
+# v2.0.10
 
 ### 한국어
-- 아이템 툴팁에 이 애드온이 추가한 줄 아래에 애드온 이름을 작은 회색 글씨로 한 번만 표시하도록 했습니다.
-- 아이템 툴팁에 레시피 배움 여부와 재료 사용처 줄이 두 번 나오지 않도록 했습니다.
+- 게임패드를 지원합니다. 패드로 EzWoW 창을 다루고, 보기(Create) 버튼으로 화면의 EzWoW 프레임으로 이동합니다.
+- EzWoW 애드온끼리 퀘스트·희귀 몬스터·드롭·채집 기록을 공유합니다(기본 켜짐, `/ezshare`).
+- 게임패드 사용 중 지도를 열 때 나던 기능 차단 오류를 수정했습니다.
 
 ### English
-- Item tooltips now show the addon name once, in small gray text, under the lines this addon adds.
-- Recipe learned status and reagent usage lines no longer show twice on item tooltips.
+- Added gamepad support: EzWoW windows work with a gamepad, and View (Create) moves to the EzWoW frames on screen.
+- EzWoW addons now share quest, rare monster, drop and gathering records (on by default, `/ezshare`).
+- Fixed actions being blocked when opening the map with a gamepad.
