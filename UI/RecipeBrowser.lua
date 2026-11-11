@@ -620,6 +620,11 @@ function RecipeBrowserWindow.waypointFromSource(src)
     if not ok or not point then return false end
     pcall(C_Map.SetUserWaypoint, point)
     if C_SuperTrack and C_SuperTrack.SetSuperTrackedUserWaypoint then pcall(C_SuperTrack.SetSuperTrackedUserWaypoint, true) end
+    -- the on-screen arrow (Libs/EzWoWWaypointArrow) names who is there
+    local arrow = _G.EzWoW_WaypointArrow
+    if type(arrow) == "table" and type(arrow.SetLabel) == "function" then
+        pcall(arrow.SetLabel, ((who or "") ~= "" and who) or zone, "EzWoW - Profession Recipes")
+    end
     -- with the gamepad on, a map opened by addon code taints the gamepad navigation (Libs/EzWoWGamePad)
     local padOn = ns.GamePad and ns.GamePad.IsActive()
     if WorldMapFrame and not padOn and not (InCombatLockdown and InCombatLockdown()) then

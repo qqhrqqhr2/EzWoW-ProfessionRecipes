@@ -30,6 +30,7 @@
 
 Libs\EzWoWGamePad\GamePad.lua
 Libs\EzWoWShare\Share.lua
+Libs\EzWoWWaypointArrow\WaypointArrow.lua
 Data\RecipeData.lua
 Core\Init.lua
 Core\UIKit.lua
