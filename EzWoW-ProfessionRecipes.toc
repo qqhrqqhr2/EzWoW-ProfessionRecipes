@@ -19,6 +19,8 @@
 ## Notes-ruRU: Добавляет вкладки неизученных профессий к окну профессий и показывает все их рецепты. (/ezpr)
 ## Notes-zhCN: 在专业窗口旁添加未学专业的标签页并列出所有配方。(/ezpr)
 ## Notes-zhTW: 在專業視窗旁新增未學專業的分頁並列出所有配方。(/ezpr)
+## X-License: GPL-3.0
+## OptionalDeps: EzWoW-Data
 ## Author: qqhrqqhr2
 ## Version: 2.0.10
 ## Category: EzWoW

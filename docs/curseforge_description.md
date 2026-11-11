@@ -103,3 +103,9 @@ WoW Forever용 제조법 도감입니다. **12개 전문 기술의 모든 제조
 - `/ezpr reset` — 설정 초기화(캐릭터별 배운 제조법 기록은 유지)
 
 지원 언어: English, 한국어, Deutsch, Français, Español, Русский, 简体中文, 繁體中文.
+
+---
+
+**Support:** If you find this addon useful, you can support its development. [Buy Me a Coffee ☕](https://buymeacoffee.com/qqhrqqhr2)
+
+**후원:** 애드온이 도움이 되셨다면 개발 후원으로 응원해 주세요. [Buy Me a Coffee ☕](https://buymeacoffee.com/qqhrqqhr2)

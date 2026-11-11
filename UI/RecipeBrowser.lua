@@ -6,7 +6,6 @@ local ADDON, ns = ...
 
 local RecipeBrowserWindow = ns.RecipeBrowserWindow or {}
 ns.RecipeBrowserWindow = RecipeBrowserWindow
-local payloadData, localizedItemNameTable = ns.Data, ns.ItemNames
 local Theme = ns.Style
 local L = ns.L
 local DONATE_URL = ns.DONATE_URL
@@ -107,8 +106,8 @@ function RecipeBrowserWindow.resolveCurrentTradeSkillLine()
         if C_TradeSkillUI.GetBaseProfessionInfo then
             local isCallOk, apiInfo = pcall(C_TradeSkillUI.GetBaseProfessionInfo)
             if isCallOk and type(apiInfo) == "table" then
-                local entityID = (apiInfo.professionID and payloadData[apiInfo.professionID] and apiInfo.professionID)
-                    or (apiInfo.parentProfessionID and payloadData[apiInfo.parentProfessionID] and apiInfo.parentProfessionID)
+                local entityID = (apiInfo.professionID and ns.Data[apiInfo.professionID] and apiInfo.professionID)
+                    or (apiInfo.parentProfessionID and ns.Data[apiInfo.parentProfessionID] and apiInfo.parentProfessionID)
                     or RecipeBrowserWindow.matchProfName(apiInfo.professionName) or RecipeBrowserWindow.matchProfName(apiInfo.parentProfessionName)
                 if entityID then return entityID, apiInfo.skillLevel end
             end
@@ -116,7 +115,7 @@ function RecipeBrowserWindow.resolveCurrentTradeSkillLine()
         if C_TradeSkillUI.GetTradeSkillLine then
             local isCallOk, entityID, name, rank = pcall(C_TradeSkillUI.GetTradeSkillLine)
             if isCallOk then
-                entityID = (entityID and payloadData[entityID] and entityID) or RecipeBrowserWindow.matchProfName(name)
+                entityID = (entityID and ns.Data[entityID] and entityID) or RecipeBrowserWindow.matchProfName(name)
                 if entityID then return entityID, rank end
             end
         end
@@ -166,8 +165,18 @@ function RecipeBrowserWindow.resolveDifficultyColor(r)
     return "|cff808080"
 end
 
+-- search text per recipe row, kept here (weak keys) so the recipe rows are never changed
+local searchBlobs = setmetatable({}, { __mode = "k" })
+local searchBlobNames = 0
+
 function RecipeBrowserWindow.getRecipeSearchBlob(r)
-    local blob = r._searchBlob
+    ns.RecipeCatalogIndex.syncSharedNames()
+    -- the reagent names change when the shared data (EzWoW-Data) is used
+    if searchBlobNames ~= ns.RecipeCatalogIndex.namesVersion then
+        searchBlobNames = ns.RecipeCatalogIndex.namesVersion
+        wipe(searchBlobs)
+    end
+    local blob = searchBlobs[r]
     if not blob then
         local parts = {
             (r[R_NAME_KO] or ""):lower(),
@@ -179,14 +188,14 @@ function RecipeBrowserWindow.getRecipeSearchBlob(r)
         }
         for _, rgVal in ipairs(r[R_REAG]) do
             parts[#parts + 1] = tostring(rgVal[1])
-            local names = localizedItemNameTable[rgVal[1]]
+            local names = ns.GetItemNames(rgVal[1])
             if names then
                 if names[1] then parts[#parts + 1] = names[1]:lower() end
                 if names[2] then parts[#parts + 1] = names[2]:lower() end
             end
         end
         blob = table.concat(parts, "\n")
-        r._searchBlob = blob
+        searchBlobs[r] = blob
     end
     return blob
 end
@@ -219,7 +228,7 @@ end
 function RecipeBrowserWindow.rebuildFilteredRecipeEntries()
     wipe(listEntries)
     panelFrameEntry.matchCount, panelFrameEntry.totalCount = 0, 0
-    local payloadData2 = currentProf and payloadData[currentProf]
+    local payloadData2 = currentProf and ns.Data[currentProf]
     if not payloadData2 then return end
     local query = panelFrameEntry.search:GetText():gsub("^%s+", ""):gsub("%s+$", "")
     panelFrameEntry.totalCount = #payloadData2.recipes
@@ -227,7 +236,7 @@ function RecipeBrowserWindow.rebuildFilteredRecipeEntries()
     if ns.DB.searchAll and query ~= "" and not learnedMode then
         local grandTotal = 0
         for _, anchorTarget in ipairs(PROFESSIONS) do
-            local pdVal = payloadData[anchorTarget.id]
+            local pdVal = ns.Data[anchorTarget.id]
             if pdVal then
                 grandTotal = grandTotal + #pdVal.recipes
                 local list = {}
@@ -552,7 +561,89 @@ function RecipeBrowserWindow.extractRecipeMapQuery(r)
         end
     end
     
-    return resolveRecipeName(r)
+    -- last resort: the made item itself, only when the map data has a spot for it (sold or dropped)
+    if RecipeBrowserWindow.mapHasItem(r[R_ITEM]) then return resolveRecipeName(r) end
+    return nil
+end
+
+-- item IDs the map search can place (MapFinder data entries of kind "item" with spots)
+local mapItemSet
+function RecipeBrowserWindow.mapHasItem(itemID)
+    if not itemID or itemID <= 0 then return false end
+    if not mapItemSet then
+        if not _G.EzWoWMapFinderData then
+            local loader = (C_AddOns and C_AddOns.LoadAddOn) or LoadAddOn
+            if loader then pcall(loader, "EzWoW-MapFinder") end
+        end
+        local data = _G.EzWoWMapFinderData
+        if type(data) ~= "table" then return false end
+        mapItemSet = {}
+        for _, e in ipairs(data) do
+            if e.kind == "item" and type(e.spawns) == "table" and #e.spawns > 0 then mapItemSet[e.id] = true end
+        end
+    end
+    return mapItemSet[itemID] == true
+end
+
+-- open the map search for a recipe, or say in chat where it comes from when there is no spot to show
+-- zone name (as the client shows it) -> uiMapID, built once from the world map tree
+local zoneMapByName
+function RecipeBrowserWindow.zoneMapID(name)
+    if not (name and C_Map and C_Map.GetMapChildrenInfo and C_Map.GetMapInfo) then return nil end
+    if not zoneMapByName then
+        zoneMapByName = {}
+        local zoneType = Enum and Enum.UIMapType and Enum.UIMapType.Zone or 3
+        for _, root in ipairs({ 946, 947, 1414, 1415 }) do
+            local ok, list = pcall(C_Map.GetMapChildrenInfo, root, zoneType, true)
+            if ok and type(list) == "table" then
+                for _, info in ipairs(list) do
+                    if info.name and info.mapID and not zoneMapByName[info.name] then zoneMapByName[info.name] = info.mapID end
+                end
+            end
+        end
+    end
+    return zoneMapByName[name]
+end
+
+-- "(Zone 49.8, 29.6)" in the source text -> waypoint there; returns true when placed
+function RecipeBrowserWindow.waypointFromSource(src)
+    if not (src and C_Map and C_Map.SetUserWaypoint and UiMapPoint and UiMapPoint.CreateFromCoordinates) then return false end
+    -- the spot "(Zone x, y)" first, then the name between the last "·" and it
+    local s, _, zone, x, y = src:find("%(([^%(%)]-)%s+(%d+%.?%d*),%s*(%d+%.?%d*)%)")
+    if not s then return false end
+    local who = src:sub(1, s - 1):match(".*·%s*(.-)%s*$")
+    x, y = tonumber(x), tonumber(y)
+    who = who and who:gsub("^sold by%s+", "")
+    local mapID = RecipeBrowserWindow.zoneMapID(zone)
+    if not (mapID and x and y) then return false end
+    local ok, point = pcall(UiMapPoint.CreateFromCoordinates, mapID, x / 100, y / 100)
+    if not ok or not point then return false end
+    pcall(C_Map.SetUserWaypoint, point)
+    if C_SuperTrack and C_SuperTrack.SetSuperTrackedUserWaypoint then pcall(C_SuperTrack.SetSuperTrackedUserWaypoint, true) end
+    -- with the gamepad on, a map opened by addon code taints the gamepad navigation (Libs/EzWoWGamePad)
+    local padOn = ns.GamePad and ns.GamePad.IsActive()
+    if WorldMapFrame and not padOn and not (InCombatLockdown and InCombatLockdown()) then
+        if not WorldMapFrame:IsShown() then
+            if ToggleWorldMap then pcall(ToggleWorldMap) elseif ShowUIPanel then pcall(ShowUIPanel, WorldMapFrame) end
+        end
+        if WorldMapFrame.SetMapID then pcall(WorldMapFrame.SetMapID, WorldMapFrame, mapID) end
+    end
+    print("|cffeba86aEzWoW - Profession Recipes|r: " .. L.waypointSet:format(((who or "") ~= "" and who .. " " or "") .. "(" .. zone .. " " .. x .. ", " .. y .. ")"))
+    return true
+end
+
+function RecipeBrowserWindow.findRecipeOnMap(r)
+    if not r then return end
+    local query = RecipeBrowserWindow.extractRecipeMapQuery(r)
+    if query and query ~= "" then
+        RecipeBrowserWindow.launchInMapFinder(query)
+        return
+    end
+    -- nothing to search for: a spot written in the source text still gives a waypoint
+    if RecipeBrowserWindow.waypointFromSource(resolveRecipeSrc(r)) then return end
+    local src = (resolveRecipeSrc(r) or ""):gsub("\n", " / ")
+    if src == "" then src = "?" end
+    print("|cffeba86aEzWoW - Profession Recipes|r: " .. L.noMapSource:format(resolveRecipeName(r) or "?", src))
 end
 
 function RecipeBrowserWindow.buildProfessionBrowserWindow()
@@ -753,7 +844,7 @@ function RecipeBrowserWindow.buildProfessionBrowserWindow()
                 RecipeBrowserWindow.refreshActiveView()
             else
                 if button == "RightButton" then
-                    RecipeBrowserWindow.launchInMapFinder(RecipeBrowserWindow.extractRecipeMapQuery(recordEntry.recipe))
+                    RecipeBrowserWindow.findRecipeOnMap(recordEntry.recipe)
                     return
                 end
                 if IsModifiedClick("CHATLINK") then RecipeBrowserWindow.linkRecipe(recordEntry.recipe, recordEntry.recipe[R_ITEM]) return end
@@ -828,7 +919,7 @@ function RecipeBrowserWindow.buildProfessionBrowserWindow()
 
     local mapBtn = RecipeBrowserWindow.createRecipeFlatButton(dataEntry, 102, 22, false, function()
         if selectedRecipe then
-            RecipeBrowserWindow.launchInMapFinder(RecipeBrowserWindow.extractRecipeMapQuery(selectedRecipe))
+            RecipeBrowserWindow.findRecipeOnMap(selectedRecipe)
         end
     end)
     mapBtn:SetPoint("TOPRIGHT", dataEntry, "TOPRIGHT", -14, -14)
@@ -984,7 +1075,7 @@ end
 
 function ns.OpenProfession(skillLine, isLearned, skill)
     if not panelFrameEntry then RecipeBrowserWindow.buildProfessionBrowserWindow() end
-    if not payloadData[skillLine] then return end
+    if not ns.Data[skillLine] then return end
     isLearned = isLearned and true or false
     if isLearned then RecipeBrowserWindow.syncLearned(); skillEntry = skill or 0 end
     if currentProf ~= skillLine or learnedMode ~= isLearned then
@@ -1253,7 +1344,7 @@ function RecipeBrowserWindow.positionProfessionSideTabs()
     
     local wanted = { { id = 0, icon = "Interface\\Icons\\INV_Scroll_03" } }
     for _, anchorTarget in ipairs(PROFESSIONS) do
-        if not learned[anchorTarget.id] and payloadData[anchorTarget.id] then wanted[#wanted + 1] = anchorTarget end
+        if not learned[anchorTarget.id] and ns.Data[anchorTarget.id] then wanted[#wanted + 1] = anchorTarget end
     end
     
     wanted[#wanted + 1] = { id = -1, icon = "Interface\\Icons\\INV_Misc_Gear_01" }
@@ -1337,6 +1428,24 @@ function RecipeBrowserWindow.onProfessionsFrameReady()
     end
 end
 
+-- the recipe table or the item names were switched to the shared data (EzWoW-Data)
+ns.RecipeCatalogIndex.onDataChanged(function()
+    wipe(searchBlobs)
+    if not panelFrameEntry then return end
+    if selectedRecipe then
+        -- keep the selection on the same recipe in the new table
+        local spellID, found = selectedRecipe[R_SPELL], nil
+        for _, p in pairs(ns.Data) do
+            for _, r in ipairs(p.recipes) do
+                if r[R_SPELL] == spellID then found = r break end
+            end
+            if found then break end
+        end
+        selectedRecipe = found
+    end
+    if panelFrameEntry:IsShown() and currentProf and ns.Data[currentProf] then RecipeBrowserWindow.refreshActiveView() end
+end)
+
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("ADDON_LOADED")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
@@ -1351,6 +1460,7 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1)
         if arg1 == ADDON then
             bootstrapDB()
             if ns.RegisterBlizzardSettings then ns.RegisterBlizzardSettings() end
+            if ns.RecipeCatalogIndex.loadSharedData then ns.RecipeCatalogIndex.loadSharedData() end
         elseif arg1 == "Blizzard_Professions" or arg1 == "Blizzard_TradeSkillUI" or arg1 == "Blizzard_CraftUI" then
             RecipeBrowserWindow.onProfessionsFrameReady()
         end

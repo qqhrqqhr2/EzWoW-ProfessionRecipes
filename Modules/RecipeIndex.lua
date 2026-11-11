@@ -7,7 +7,6 @@ local type, pairs, ipairs, tonumber, tostring, select, pcall = type, pairs, ipai
 
 local RecipeCatalogIndex = ns.RecipeCatalogIndex or {}
 ns.RecipeCatalogIndex = RecipeCatalogIndex
-local payloadData, localizedItemNameTable = ns.Data, ns.ItemNames
 local CLIENT_LANG = ns.CLIENT_LANG
 local PROFESSIONS = ns.PROFESSIONS
 local R_SPELL, R_ITEM, R_CAT, R_ORANGE, R_YELLOW, R_GREEN, R_GREY = ns.R_SPELL, ns.R_ITEM, ns.R_CAT, ns.R_ORANGE, ns.R_YELLOW, ns.R_GREEN, ns.R_GREY
@@ -16,10 +15,75 @@ local R_DESC_KO, R_DESC_EN, R_SRC_KO, R_SRC_EN = ns.R_DESC_KO, ns.R_DESC_EN, ns.
 local F_NEW, F_TRAINER, F_ALLIANCE, F_HORDE = ns.F_NEW, ns.F_TRAINER, ns.F_ALLIANCE, ns.F_HORDE
 
 local recipeProfessionMap, reagentLookupIndex
+
+-----------------------------------------------------------------------------
+-- Shared data (EzWoW-Data, optional)
+-- ns.Data and the reagent names start as the bundled tables (Data/RecipeData.lua). When
+-- EzWoW-Data is installed and its table format matches, its Recipes module (recipe table and
+-- reagent names, same shapes) replaces both once it is loaded (never during combat;
+-- EzWoW_Data.Load waits for the combat to end). The shared tables are only read, never changed.
+-- Always read ns.Data / RecipeCatalogIndex.getItemNames() when needed, never keep them.
+-----------------------------------------------------------------------------
+local SHARED_FORMAT = 2
+local itemNames = ns.ItemNames or {}    -- { koName, enName } per reagent: bundled, then shared
+local dataChangedHandlers = {}
+RecipeCatalogIndex.namesVersion = 0
+
+local function sharedAPI()
+    local D = _G.EzWoW_Data
+    if type(D) == "table" and D.formatVersion == SHARED_FORMAT and type(D.Load) == "function"
+        and type(D.Peek) == "function" then
+        return D
+    end
+    return nil
+end
+
+function RecipeCatalogIndex.onDataChanged(fn)
+    dataChangedHandlers[#dataChangedHandlers + 1] = fn
+end
+
+local function notifyDataChanged()
+    for _, fn in ipairs(dataChangedHandlers) do pcall(fn) end
+end
+
+local function useSharedRecipes(D)
+    local m = D.Peek("Recipes")
+    if type(m) ~= "table" or m.formatVersion ~= SHARED_FORMAT then return end
+    local profs, names = m.professions, m.reagentNames
+    if type(profs) ~= "table" or type(names) ~= "table" then return end
+    for _, p in pairs(profs) do
+        if type(p) ~= "table" or type(p.recipes) ~= "table" or type(p.cats) ~= "table" then return end
+    end
+    if next(profs) == nil or ns.Data == profs then return end
+    ns.Data = profs
+    itemNames = names
+    ns.ItemNames = names
+    recipeProfessionMap, reagentLookupIndex = nil, nil
+    RecipeCatalogIndex.namesVersion = RecipeCatalogIndex.namesVersion + 1
+    notifyDataChanged()
+end
+
+-- called once the addon is loaded (out of combat, or the load waits for the combat to end)
+function RecipeCatalogIndex.loadSharedData()
+    local D = sharedAPI()
+    if not D then return end
+    pcall(D.Load, "Recipes", function(_, ok) if ok then useSharedRecipes(D) end end)
+end
+
+-- kept for the browser's search cache: the names change only together with the recipe table
+function RecipeCatalogIndex.syncSharedNames() end
+
+-- { koName, enName } of an item, or nil. Like the bundled table, only reagents have names here
+-- (crafted items use the game's names).
+function RecipeCatalogIndex.getItemNames(id)
+    return itemNames[id]
+end
+ns.GetItemNames = RecipeCatalogIndex.getItemNames
+
 function RecipeCatalogIndex.constructRecipeLookupIndex()
     if recipeProfessionMap then return end
     recipeProfessionMap, reagentLookupIndex = {}, {}
-    for skill, payloadData2 in pairs(payloadData) do
+    for skill, payloadData2 in pairs(ns.Data) do
         for _, rowEntry in ipairs(payloadData2.recipes) do
             recipeProfessionMap[rowEntry] = skill
             for _, rgVal in ipairs(rowEntry[13]) do
@@ -84,13 +148,14 @@ local resolveItemQualityByID = (C_Item and C_Item.GetItemQualityByID) or functio
 
 function RecipeCatalogIndex.resolveItemName(id)
     
-    if ns.ACTIVE_LANG ~= CLIENT_LANG and (ns.ACTIVE_LANG == "ko" or ns.ACTIVE_LANG == "en") and localizedItemNameTable[id] then
-        return localizedItemNameTable[id][ns.LI] or localizedItemNameTable[id][2] or ("#" .. id)
+    local names = RecipeCatalogIndex.getItemNames(id)
+    if ns.ACTIVE_LANG ~= CLIENT_LANG and (ns.ACTIVE_LANG == "ko" or ns.ACTIVE_LANG == "en") and names then
+        return names[ns.LI] or names[2] or ("#" .. id)
     end
     local nodeEntry = resolveItemNameByID(id)
     if nodeEntry and nodeEntry ~= "" then return nodeEntry end
     if C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(id) end
-    local windowFrame = localizedItemNameTable[id]
+    local windowFrame = names
     return (windowFrame and (windowFrame[ns.LI] or windowFrame[2])) or ("#" .. id)
 end
 ns.ItemName = RecipeCatalogIndex.resolveItemName

@@ -147,6 +147,10 @@ end
 -----------------------------------------------------------------------------
 local nameMaps = {}
 local itemCache = {}
+-- the cached rows belong to the old recipe table once the shared data (EzWoW-Data) is used
+if ns.RecipeCatalogIndex and ns.RecipeCatalogIndex.onDataChanged then
+    ns.RecipeCatalogIndex.onDataChanged(function() wipe(nameMaps); wipe(itemCache) end)
+end
 
 local function normalize(text)
     if type(text) ~= "string" or text == "" then return nil end
