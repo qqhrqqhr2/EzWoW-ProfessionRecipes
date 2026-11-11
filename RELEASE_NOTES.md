@@ -1,11 +1,13 @@
-# v2.0.10
+# v2.0.11
 
 ### 한국어
-- 게임패드를 지원합니다. 패드로 EzWoW 창을 다루고, 보기(Create) 버튼으로 화면의 EzWoW 프레임으로 이동합니다.
-- EzWoW 애드온끼리 퀘스트·희귀 몬스터·드롭·채집 기록을 공유합니다(기본 켜짐, `/ezshare`).
-- 게임패드 사용 중 지도를 열 때 나던 기능 차단 오류를 수정했습니다.
+- 제조법을 최신 게임 데이터로 갱신했습니다(배우는 숙련도, 재료 이름, 마법부여 설명).
+- 게임에서 사라진 제조법을 빼고 새 마법부여 제조법을 더했습니다.
+- 지도에서 찾기: 배우는 곳에 좌표가 있으면 그 자리에 웨이포인트를 찍고, 위치가 없는 제조법은 빈 지도 대신 채팅창에 획득처를 알려 줍니다.
+- EzWoW - Data(공용 자료)가 설치돼 있으면 그 자료를 함께 씁니다. 없어도 그대로 동작합니다.
 
 ### English
-- Added gamepad support: EzWoW windows work with a gamepad, and View (Create) moves to the EzWoW frames on screen.
-- EzWoW addons now share quest, rare monster, drop and gathering records (on by default, `/ezshare`).
-- Fixed actions being blocked when opening the map with a gamepad.
+- Updated recipes from the latest game data (skill levels to learn, reagent names, enchant texts).
+- Removed recipes no longer in the game and added new enchanting recipes.
+- Find on Map: sets a waypoint when the source has coordinates, and recipes with no spot tell their source in chat instead of opening an empty map.
+- Uses EzWoW - Data (shared data) when it is installed; works the same without it.
