@@ -1,9 +1,7 @@
-# v2.0.13
+# v2.0.14
 
 ### 한국어
-- 제조법 출처 좌표로 추적 핀을 찍으면 화면에 방향 화살표와 판매자 이름이 나옵니다.
-- 화살표 창을 오른쪽 클릭하면 화살표 모양을 고를 수 있습니다.
+- 다른 EzWoW 사용자와 기록을 주고받을 때, 귓속말이 닿지 않는 사람에게 같은 기록을 반복해서 보내지 않습니다. 그 사람이 다시 접속하면 바로 다시 주고받습니다.
 
 ### English
-- Waypoints set from a recipe source now show an on-screen arrow with the vendor's name.
-- Right-click the arrow to pick its look.
+- Record sharing with other EzWoW users no longer keeps whispering players it cannot reach; it picks them up again as soon as they come back online.
