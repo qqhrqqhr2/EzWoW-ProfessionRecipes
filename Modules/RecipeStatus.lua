@@ -179,7 +179,8 @@ function RecipeStatus.findRecipe(itemID, itemName)
     if type(itemName) ~= "string" or itemName == "" then return nil end
     local okInfo, _, _, _, _, _, classID, subClassID = pcall(C_Item.GetItemInfoInstant, itemID)
     if not okInfo or classID ~= RECIPE_CLASS then itemCache[itemID] = false; return nil end
-    local bare = itemName:match("^[^:：]+[:：]%s*(.+)$") or itemName
+    -- (byte patterns: the full-width colon is looked for on its own)
+    local bare = itemName:match("^[^:]+:%s*(.+)$") or itemName:match("：%s*(.+)$") or itemName
     local candidates = {}
     local skillLine = SUBCLASS_SKILL[subClassID]
     if skillLine and ns.Data[skillLine] then candidates[1] = skillLine

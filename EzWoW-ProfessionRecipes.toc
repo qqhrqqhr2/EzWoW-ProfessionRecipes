@@ -24,7 +24,7 @@
 ## Author: qqhrqqhr2
 ## Version: 2.0.15
 ## Category: EzWoW
-## SavedVariables: EzWoW_ProfessionRecipesDB, EzWoW_SharedData
+## SavedVariables: EzWoW_ProfessionRecipesDB, EzWoW_SharedData, EzWoW_ShareStore_ProfessionRecipes
 ## IconTexture: Interface\AddOns\EzWoW-ProfessionRecipes\Icon
 ## X-Curse-Project-ID: 1729781
 

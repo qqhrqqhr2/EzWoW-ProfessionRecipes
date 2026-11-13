@@ -651,7 +651,7 @@ function RecipeBrowserWindow.extractRecipeMapQuery(r)
     if not r then return nil end
     local sourceData = resolveRecipeSrc(r) or ""
     
-    local qName = sourceData:match("퀘스트%s*「(.-)」") or sourceData:match("quest%s*“([^”]+)”") or sourceData:match('quest%s*"([^"]+)"')
+    local qName = sourceData:match("퀘스트%s*「(.-)」") or sourceData:match("quest%s*“(.-)”") or sourceData:match('quest%s*"([^"]+)"')
     if qName and qName ~= "" then
         return "Q " .. qName
     end
@@ -661,8 +661,10 @@ function RecipeBrowserWindow.extractRecipeMapQuery(r)
         npcEn = npcEn:gsub("^%s+", ""):gsub("%s+$", "")
         if npcEn ~= "" then return "N " .. npcEn end
     end
-    local npcKo = sourceData:match("·%s*([^·/\n%(]+)%s*%(")
+    -- "·" is two bytes: inside [^...] it would also exclude Hangul syllables with byte B7 (그, 컷), so cut at the last "·" afterwards
+    local npcKo = sourceData:match("·%s*([^/\n%(]+)%s*%(")
     if npcKo then
+        npcKo = npcKo:match(".*·%s*(.*)$") or npcKo
         npcKo = npcKo:gsub("^%s+", ""):gsub("%s+$", "")
         if npcKo ~= "" then return "N " .. npcKo end
     end
@@ -1154,7 +1156,6 @@ function RecipeBrowserWindow.buildProfessionBrowserWindow()
     dataEntry:HookScript("OnSizeChanged", relayoutBrowserPanels)
     left:HookScript("OnSizeChanged", relayoutBrowserPanels)
     windowFrame.Relayout = relayoutBrowserPanels
-    if windowFrame.SetClipsChildren then windowFrame:SetClipsChildren(true) end
     if dataEntry.SetClipsChildren then dataEntry:SetClipsChildren(true) end
     if left.SetClipsChildren then left:SetClipsChildren(true) end
 
