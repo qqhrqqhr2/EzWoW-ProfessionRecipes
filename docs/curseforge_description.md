@@ -12,15 +12,15 @@ A recipe book for WoW Forever: **12 professions and all their recipes** (camping
 
 ![Settings window](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-ProfessionRecipes/master/docs/images/settings_en.png)
 
-*Mock-ups rebuilt from the window sizes, coordinates, colours and strings in the addon code. Character names are made up.*
+*In-game screenshots (WoW Forever, Korean client). Character and player names and chat text are blurred.*
 
 ## Features
 
 ### Recipe window
 - Alchemy, Blacksmithing, Enchanting, Engineering, Leatherworking, Tailoring, Mining (smelting), Cooking, First Aid, Herbalism, Skinning and Fishing (camp gear).
 - Search by recipe name (Korean or English), reagent, zone or ID; filters for Forever-new recipes, skill 225 or less, other faction, all professions, hide learned, learnable now.
-- Required skill in difficulty colours; details with skill steps, amount made, where to learn (trainers, vendors per faction with coordinates and reputation, drops, quests) and reagents.
-- Find vendors, trainers and quests on the map with EzWoW - Map Finder (button or right-click).
+- Required skill in difficulty colours; details with skill steps, amount made, where to learn (trainers, vendors per faction with coordinates and reputation, drops, quests) and reagents, plus recipe shops and drops EzWoW users saw in the game.
+- Find vendors, trainers and quests on the map with EzWoW - Map Finder (button or right-click). With coordinates you get a waypoint and a direction arrow with the seller's name; recipes with no place get their source in chat.
 
 ### Tooltips
 - **Reagents**: how many recipes use the item, per profession; hold Shift for the recipe names.
@@ -63,15 +63,15 @@ WoW Forever용 제조법 도감입니다. **12개 전문 기술의 모든 제조
 
 ![설정창](https://raw.githubusercontent.com/qqhrqqhr2/EzWoW-ProfessionRecipes/master/docs/images/settings_ko.png)
 
-*애드온 코드의 창 크기 · 좌표 · 색상 · 문구로 재현한 예시 화면입니다. 캐릭터 이름은 지어낸 예시입니다.*
+*실제 게임 화면입니다(WoW Forever, 한국어 클라이언트). 캐릭터 · 다른 플레이어 이름과 채팅 내용은 가렸습니다.*
 
 ## 기능
 
 ### 제조법 창
 - 연금술 · 대장기술 · 마법부여 · 기계공학 · 가죽세공 · 재봉술 · 채광(제련) · 요리 · 응급치료 · 약초 채집 · 무두질 · 낚시(야영 설비).
 - 한 · 영 제조법 이름, 재료, 지역, ID로 검색. 포에버 신규만 · 숙련 225 이하 · 다른 진영 숨기기 · 모든 전문 기술 검색 · 배운 것 숨기기 · 지금 배울 수 있는 것만 필터.
-- 필요 숙련도를 난이도 색으로 표시하고, 숙련 단계 · 제작 수량 · 배우는 곳(전문가, 진영별 상인과 좌표 · 평판, 드랍, 퀘스트) · 재료를 자세히 보여 줍니다.
-- EzWoW - Map Finder로 상인 · 전문가 · 퀘스트 위치를 지도에서 찾습니다(단추 또는 우클릭).
+- 필요 숙련도를 난이도 색으로 표시하고, 숙련 단계 · 제작 수량 · 배우는 곳(전문가, 진영별 상인과 좌표 · 평판, 드랍, 퀘스트) · 재료를 자세히 보여 줍니다. EzWoW 사용자가 게임에서 확인한 도안 상점 · 드롭도 함께 나옵니다.
+- EzWoW - Map Finder로 상인 · 전문가 · 퀘스트 위치를 지도에서 찾습니다(단추 또는 우클릭). 좌표가 있으면 웨이포인트와 방향 화살표(판매자 이름 표시)가 나오고, 위치가 없는 제조법은 채팅창에 획득처를 알려 줍니다.
 
 ### 툴팁
 - **재료**: 그 재료를 쓰는 제조법 수를 전문 기술별로 표시하고, Shift를 누르면 제조법 이름 목록.

@@ -362,6 +362,121 @@ function RecipeBrowserWindow.tooltipLines(itemID)
     return table.concat(outputList, "\n")
 end
 
+-----------------------------------------------------------------------------
+-- Where EzWoW users bought or looted the recipe's scroll, from the shared
+-- records (shops seen, drops). A scroll's name is "<kind>: <recipe name>"
+-- ("조제법: ...", "Recipe: ..."), which ties it to the recipe.
+-----------------------------------------------------------------------------
+local RECIPE_CLASS = (Enum and Enum.ItemClass and Enum.ItemClass.Recipe) or 9
+local scrollIndex, scrollIndexAt, scrollNamesMissing = nil, 0, false
+
+local function normName(text)
+    if type(text) ~= "string" or text == "" then return nil end
+    text = text:lower():gsub("^%s+", ""):gsub("%s+$", "")
+    return text
+end
+
+local function buildScrollIndex()
+    local share = ns.Share
+    if not (share and type(share.Store) == "function" and type(share.Data) == "function") then return {} end
+    local ids = {}
+    local function addID(id) if type(id) == "number" and id > 0 then ids[id] = true end end
+    local okShops, shops = pcall(share.Store, "M")
+    for _, row in pairs(okShops and type(shops) == "table" and shops or {}) do
+        if type(row) == "table" then
+            for _, id in ipairs(type(row.own) == "table" and row.own or {}) do addID(id) end
+            for id, ok in pairs(type(row.got) == "table" and row.got or {}) do if ok == true then addID(id) end end
+        end
+    end
+    local seed = type(share.Seed) == "function" and share.Seed or function() return nil end
+    for _, items in pairs(seed("vendors") or {}) do
+        for _, id in ipairs(type(items) == "table" and items or {}) do addID(id) end
+    end
+    local okData, data = pcall(share.Data)
+    for _, items in pairs(okData and type(data) == "table" and type(data.drops) == "table" and data.drops or {}) do
+        for id in pairs(type(items) == "table" and items or {}) do addID(id) end
+    end
+    for _, items in pairs(seed("drops") or {}) do
+        for _, id in ipairs(type(items) == "table" and items or {}) do addID(id) end
+    end
+    local index = {}
+    scrollNamesMissing = false
+    local getInstant = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+    local getName = C_Item and C_Item.GetItemNameByID
+    for id in pairs(ids) do
+        local okInfo, _, _, _, _, _, classID = pcall(getInstant, id)
+        if okInfo and classID == RECIPE_CLASS then
+            local okName, name = false, nil
+            if getName then okName, name = pcall(getName, id) end
+            if okName and type(name) == "string" and not (issecretvalue and issecretvalue(name)) then
+                -- (byte patterns: the full-width colon is looked for on its own)
+                local recipeName = name:match("^[^:]+:%s*(.+)$") or name:match("：%s*(.+)$")
+                local key = normName(recipeName)
+                if key then
+                    index[key] = index[key] or {}
+                    table.insert(index[key], id)
+                end
+            else
+                scrollNamesMissing = true
+                if C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, id) end
+            end
+        end
+    end
+    return index
+end
+
+-- "Sold by: ... / Drops from: ..." for a recipe, or nil
+function RecipeBrowserWindow.sharedSourceText(r)
+    local share = ns.Share
+    if not share then return nil end
+    local now = GetTime and GetTime() or 0
+    -- built again a while later: new records, scroll names that were not loaded yet
+    if not scrollIndex or now - scrollIndexAt > (scrollNamesMissing and 3 or 60) then
+        local ok, index = pcall(buildScrollIndex)
+        scrollIndex = ok and index or {}
+        scrollIndexAt = now
+    end
+    local scrolls, seenScroll = {}, {}
+    for _, name in ipairs({ r[R_NAME_KO], r[R_NAME_EN], resolveRecipeName(r) }) do
+        for _, id in ipairs(scrollIndex[normName(name)] or {}) do
+            if not seenScroll[id] then
+                seenScroll[id] = true
+                scrolls[#scrolls + 1] = id
+            end
+        end
+    end
+    if #scrolls == 0 then return nil end
+    local function nameOf(src)
+        if type(share.SourceName) ~= "function" then return nil end
+        local ok, n = pcall(share.SourceName, src)
+        return ok and type(n) == "string" and n ~= "" and n or nil
+    end
+    local sold, dropped, seenName = {}, {}, {}
+    for _, id in ipairs(scrolls) do
+        local okV, vendors = pcall(share.GetVendors, id)
+        for _, npcID in ipairs(okV and type(vendors) == "table" and vendors or {}) do
+            local n = nameOf("n" .. npcID)
+            if n and not seenName["v" .. n] and #sold < 4 then
+                seenName["v" .. n] = true
+                sold[#sold + 1] = n
+            end
+        end
+        local okD, drops = pcall(share.GetDropSources, id)
+        for _, row in ipairs(okD and type(drops) == "table" and drops or {}) do
+            local n = type(row) == "table" and nameOf(row.src)
+            if n and not seenName["d" .. n] and #dropped < 4 then
+                seenName["d" .. n] = true
+                dropped[#dropped + 1] = n
+            end
+        end
+    end
+    local lines = {}
+    if #sold > 0 then lines[#lines + 1] = "|cffaee26a" .. L.seenSold .. ":|r " .. table.concat(sold, ", ") end
+    if #dropped > 0 then lines[#lines + 1] = "|cffea837e" .. L.seenDrop .. ":|r " .. table.concat(dropped, ", ") end
+    if #lines == 0 then return nil end
+    return table.concat(lines, "\n")
+end
+
 function refreshDetail()
     local dataEntry = panelFrameEntry.detail
     local r = selectedRecipe
@@ -396,6 +511,9 @@ function refreshDetail()
     dataEntry.skill:SetText(L.skill .. "  " .. resolveSkillText(r))
 
     local where = resolveRecipeSrc(r)
+    -- where EzWoW users bought or looted the scroll in the game
+    local okSeen, seen = pcall(RecipeBrowserWindow.sharedSourceText, r)
+    if okSeen and seen then where = (where ~= "" and (where .. "\n") or "") .. seen end
     dataEntry.where:SetText(where)
     local whVal = (where ~= "") and (dataEntry.where:GetStringHeight() or 0) or 0
     dataEntry.desc:SetHeight(math.max(50, (dataEntry.descBase or 170) - whVal))
