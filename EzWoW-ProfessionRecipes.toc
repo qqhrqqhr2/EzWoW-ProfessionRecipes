@@ -22,7 +22,7 @@
 ## X-License: GPL-3.0
 ## OptionalDeps: EzWoW-Data
 ## Author: qqhrqqhr2
-## Version: 2.0.15
+## Version: 2.0.16
 ## Category: EzWoW
 ## SavedVariables: EzWoW_ProfessionRecipesDB, EzWoW_SharedData, EzWoW_ShareStore_ProfessionRecipes
 ## IconTexture: Interface\AddOns\EzWoW-ProfessionRecipes\Icon
