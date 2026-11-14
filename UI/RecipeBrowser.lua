@@ -633,14 +633,12 @@ function RecipeBrowserWindow.launchInMapFinder(query)
     -- with the gamepad on, a map opened by addon code taints the gamepad
     -- navigation (Libs/EzWoWGamePad): the search only runs on an open map
     local padOn = ns.GamePad and ns.GamePad.IsActive()
-    if WorldMapFrame and not WorldMapFrame:IsShown() and not padOn then
-        if ToggleWorldMap then
-            pcall(ToggleWorldMap)
-        elseif ShowUIPanel then
-            pcall(ShowUIPanel, WorldMapFrame)
-        else
-            WorldMapFrame:Show()
-        end
+    -- opened by the game itself (C_Map.OpenWorldMap): opened from addon code, the
+    -- map keeps values written by tainted code and its own pins are then
+    -- blocked in combat (SetPassThroughButtons)
+    if WorldMapFrame and not WorldMapFrame:IsShown() and not padOn and C_Map and C_Map.OpenWorldMap
+        and not (InCombatLockdown and InCombatLockdown()) then
+        pcall(C_Map.OpenWorldMap)
     end
     if SlashCmdList and SlashCmdList.EZWOWMAPFINDER then
         SlashCmdList.EZWOWMAPFINDER(query)
@@ -747,11 +745,9 @@ function RecipeBrowserWindow.waypointFromSource(src)
     end
     -- with the gamepad on, a map opened by addon code taints the gamepad navigation (Libs/EzWoWGamePad)
     local padOn = ns.GamePad and ns.GamePad.IsActive()
-    if WorldMapFrame and not padOn and not (InCombatLockdown and InCombatLockdown()) then
-        if not WorldMapFrame:IsShown() then
-            if ToggleWorldMap then pcall(ToggleWorldMap) elseif ShowUIPanel then pcall(ShowUIPanel, WorldMapFrame) end
-        end
-        if WorldMapFrame.SetMapID then pcall(WorldMapFrame.SetMapID, WorldMapFrame, mapID) end
+    -- the game opens and moves the map (C_Map.OpenWorldMap), not addon code
+    if WorldMapFrame and not padOn and not (InCombatLockdown and InCombatLockdown()) and C_Map and C_Map.OpenWorldMap then
+        pcall(C_Map.OpenWorldMap, mapID)
     end
     print("|cffeba86aEzWoW - Profession Recipes|r: " .. L.waypointSet:format(((who or "") ~= "" and who .. " " or "") .. "(" .. zone .. " " .. x .. ", " .. y .. ")"))
     return true
