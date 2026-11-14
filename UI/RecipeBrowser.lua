@@ -448,7 +448,7 @@ function RecipeBrowserWindow.sharedSourceText(r)
     if #scrolls == 0 then return nil end
     local function nameOf(src)
         if type(share.SourceName) ~= "function" then return nil end
-        local ok, n = pcall(share.SourceName, src)
+        local ok, n = pcall(share.SourceName, src, ns.ACTIVE_LANG)
         return ok and type(n) == "string" and n ~= "" and n or nil
     end
     local sold, dropped, seenName = {}, {}, {}
